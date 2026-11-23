@@ -1,21 +1,28 @@
-# Classroom Door Display (Docker)
+# LBC Room Signs (Classroom Door Display)
 
-Run this on your laptop for testing or on your DigitalOcean droplet to sync 30+ iPad door displays in real time.
+A lightweight, Dockerized web app for **Lenexa Baptist Church** that turns a weekly Excel/CSV schedule into live, color-coded classroom door signs for 30+ wall-mounted iPads.
 
-## 1. Run Locally on Your Laptop
+- **Live URL:** `https://lbcsigns.hipfog.com`
+- **iPad Kiosk URL Pattern:** `https://lbcsigns.hipfog.com/?room=<ROOM_ID>&kiosk=1` (e.g. `/?room=101&kiosk=1`)
+- **Project Documentation:**
+  - [Requirements](docs/requirements.md)
+  - [Project Plan & Rollout Checklist](docs/project-plan.md)
+  - [Setup & Deployment Guide (WSL, GitHub, DigitalOcean, Nginx)](docs/setup-and-deployment.md)
+
+## Quick Overview
+- **Door Display (`/`):** Public read-only view for iPads outside each classroom. Automatically switches between **In Session**, **Cancelled**, and **Room Open**, shows **Up Next**, and polls `/api/state` every 15 seconds.
+- **Upload Excel / CSV (`🔒 Admin`):** Upload `.xlsx`, `.xls`, or `.csv` schedules for 30+ rooms, download a ready-made `.xlsx` template, and preview all loaded rows.
+- **Admin Panel (`🔒 Admin`):** One-click class cancellations/restores, inline title and leader edits, age-group color overrides, custom door notice banners, direct iPad link copying, and `.xlsx` export.
+
+## Local Quickstart (Docker)
 ```bash
-ADMIN_PASSWORD="your-strong-password" docker compose up -d --build
-```
-Open `http://localhost:8080` in your browser.
-- Door displays (`http://localhost:8080/?room=101&kiosk=1`) are public and auto-refresh every 15 seconds.
-- **Upload Excel / CSV** and **Admin Panel** require your `ADMIN_PASSWORD`.
+# 1. Create your .env file (never commit this to GitHub)
+cat << EOF > .env
+ADMIN_PASSWORD=your-strong-password
+SESSION_SECRET=$(openssl rand -hex 32)
+EOF
 
-## 2. Deploy to DigitalOcean Droplet
-1. Copy this folder to your droplet (`scp -r classroom-display-docker root@YOUR_DROPLET_IP:~/classroom-display`).
-2. SSH into your droplet and set strong secrets:
-   ```bash
-   export ADMIN_PASSWORD="your-strong-password"
-   export SESSION_SECRET="$(openssl rand -hex 32)"
-   docker compose up -d --build
-   ```
-3. **Important for Admin Security:** Put a reverse proxy with free HTTPS (like **Caddy** or **Nginx + Certbot**) in front of port `8080` so your admin password is encrypted over Wi-Fi.
+# 2. Start the container
+docker compose up -d --build
+```
+Open `http://localhost:8080` (or `3002` when using the DigitalOcean `compose.yml`).
