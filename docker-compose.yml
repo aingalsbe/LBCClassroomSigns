@@ -1,0 +1,13 @@
+services:
+  classroom-display:
+    build: .
+    container_name: classroom-display
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Change these before deploying to your DigitalOcean droplet!
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-change-me-now}"
+      SESSION_SECRET: "${SESSION_SECRET:-replace-with-long-random-string}"
+    volumes:
+      - ./data:/app/data
