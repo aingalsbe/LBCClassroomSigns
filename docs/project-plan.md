@@ -35,15 +35,16 @@
 - Support optional `Date` column and one-date cancellations/moves in `.xlsx`/`.csv` uploads, preview diff, exporter, and template.
 - Admin **Special Dates & Holidays** panel (including one-click campus-wide holiday/snow-day cancellations) and **auto-expiring Room Notices** (`note_expires_at`).
 
-### `v1.3.0` — Hallway TV Overview (`/tv`) & Visitor Directory (`feat/hallway-tv-and-directory`)
-- **1920x1080 Hallway TV Dashboard (`/tv`):** 4-column landscape overview grouped by Age Group with live progress bars, automatic 12-second pagination, LBC branding, Dark/Light theme, and per-TV URL filters (`/tv?groups=...`, `/tv?rooms=...`).
-- **Mobile Visitor Directory (`/directory`):** QR-code-friendly "Find My Class" search by class title, teacher/leader, room, or age group.
-
-### `v1.4.0` — 30+ iPad Fleet Ops & Broadcast Alerts (`feat/kiosk-fleet-ops`)
+### `v1.3.0` — 30+ iPad Fleet Ops, Burn-In Screensaver & Broadcast Alerts (`feat/kiosk-fleet-ops`)
+- **Anti-Burn-In Idle Screensaver:** When no active or remaining classes are scheduled for the day (and no active notice/broadcast), display the **LBC logo above "No Classes Scheduled"** smoothly drifting along a continuous randomized path around a dark screen to prevent OLED/LCD burn-in; wakes immediately when a class, notice, or broadcast activates.
 - **Live Kiosk Fleet Health Dashboard:** Piggyback lightweight room check-ins on existing 15s polls to flag Online / Stale / Offline iPads and `buildId` versions before Sunday services.
-- **Campus-Wide Broadcast / Alert Banner:** High-visibility Info/Warning/Emergency banner across all door iPads and `/tv` screens within 15s.
+- **Campus-Wide Broadcast / Alert Banner:** High-visibility Info/Warning/Emergency banner across all door iPads (and `/tv` screens) within 15s.
 - **Time-Travel Schedule Simulator:** Preview any future date & time in Admin before Sunday morning.
 - **Printable Room QR Setup Sheet** & **Service Worker True-Offline Boot** for full Wi-Fi outage resilience.
+
+### `v1.4.0` — Hallway TV Overview (`/tv`) & Visitor Directory (`feat/hallway-tv-and-directory`)
+- **1920x1080 Hallway TV Dashboard (`/tv`):** 4-column landscape overview grouped by Age Group with live progress bars, automatic 12-second pagination, LBC branding, Dark/Light theme, per-TV URL filters (`/tv?groups=...`, `/tv?rooms=...`), and shared anti-burn-in idle screensaver when no classes remain.
+- **Mobile Visitor Directory (`/directory`):** QR-code-friendly "Find My Class" search by class title, teacher/leader, room, or age group.
 
 ### `v2.0+` — Future Backlog
 - Planning Center Online (PCO) / ChMS read-only sync.
