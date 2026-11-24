@@ -81,9 +81,13 @@ def test_show_logo_setting_toggle(tmp_path):
 
 def test_container_hardening_and_env_example():
     dockerfile = Path("Dockerfile").read_text(encoding="utf-8")
-    assert "USER appuser" in dockerfile
+    assert "appuser" in dockerfile
+    assert "docker_entrypoint.py" in dockerfile
     assert "HEALTHCHECK" in dockerfile
     assert "/api/health" in dockerfile
+
+    entrypoint = Path("docker_entrypoint.py").read_text(encoding="utf-8")
+    assert "os.setuid" in entrypoint and "os.setgid" in entrypoint
 
     compose = Path("docker-compose.yml").read_text(encoding="utf-8")
     assert "change-me-now" not in compose
