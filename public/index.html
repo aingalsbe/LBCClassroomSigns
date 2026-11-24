@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Classroom Door Display</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -156,27 +155,132 @@
           <div>
             <h2 class="text-xl sm:text-2xl font-bold text-white">Upload Weekly Schedule Spreadsheet</h2>
             <p class="text-sm text-slate-400 mt-1">
-              Load an <code class="text-indigo-300">.xlsx</code>, <code class="text-indigo-300">.xls</code>, or <code class="text-indigo-300">.csv</code> file with all 30+ rooms. Changes sync to every iPad automatically.
+              Upload a validated <code class="text-indigo-300">.xlsx</code> or <code class="text-indigo-300">.csv</code> file (max 5 MB). Nothing goes live until you review the preview and click <strong>Publish Schedule</strong>.
             </p>
           </div>
           <button id="downloadSampleBtn" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 transition">
-            Download Sample .xlsx
+            Download Template .xlsx
           </button>
         </div>
 
         <label id="dropZone" for="fileInput" class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-700 hover:border-indigo-500 bg-slate-950/60 p-8 text-center cursor-pointer transition">
           <div class="text-3xl mb-2">📄</div>
-          <div class="text-sm sm:text-base font-semibold text-slate-200">Click to choose an Excel or CSV file, or drag &amp; drop it here</div>
-          <div class="text-xs text-slate-400 mt-1">Expected columns: <span class="text-slate-300">Room, RoomName, AgeGroup, Day, StartTime, EndTime, ClassTitle, Leader</span></div>
-          <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
+          <div class="text-sm sm:text-base font-semibold text-slate-200">Click to choose an .xlsx or .csv file, or drag &amp; drop it here</div>
+          <div class="text-xs text-slate-400 mt-1">Required columns: <span class="text-slate-300">Room, AgeGroup, Day, StartTime, EndTime, ClassTitle</span> · Optional: <span class="text-slate-300">RoomName, Leader, Cancelled, Topic, Note</span></div>
+          <input id="fileInput" type="file" accept=".xlsx,.csv" class="hidden" />
         </label>
 
         <div id="uploadStatus" class="hidden rounded-xl px-4 py-3 text-sm font-medium"></div>
       </div>
 
+      <!-- TWO-STEP PREVIEW & DIFF PANEL -->
+      <div id="importPreviewPanel" class="hidden rounded-2xl bg-slate-900 border border-indigo-500/40 p-6 space-y-5 shadow-xl">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-2">
+              Step 2 — Review Before Publishing
+            </div>
+            <h3 id="previewFilename" class="text-lg font-bold text-white">Preview</h3>
+            <p id="previewSummaryText" class="text-xs sm:text-sm text-slate-400 mt-0.5"></p>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <button id="cancelPreviewBtn" type="button" class="px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+              Cancel
+            </button>
+            <button id="commitImportBtn" type="button" class="px-4 py-2 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition">
+              Publish Schedule
+            </button>
+          </div>
+        </div>
+
+        <div id="previewDiffBadges" class="flex flex-wrap gap-2"></div>
+
+        <div id="previewErrorsBox" class="hidden rounded-xl bg-rose-500/10 border border-rose-500/30 p-4 space-y-2">
+          <div class="text-xs font-bold uppercase tracking-wider text-rose-300">Blocking Errors — Fix in Spreadsheet Before Publishing</div>
+          <ul id="previewErrorsList" class="text-xs sm:text-sm text-rose-200 space-y-1 list-disc list-inside"></ul>
+        </div>
+
+        <div id="previewWarningsBox" class="hidden rounded-xl bg-amber-500/10 border border-amber-500/30 p-4 space-y-2">
+          <div class="text-xs font-bold uppercase tracking-wider text-amber-300">Warnings</div>
+          <ul id="previewWarningsList" class="text-xs sm:text-sm text-amber-200 space-y-1 list-disc list-inside"></ul>
+        </div>
+
+        <div id="previewOptionsBox" class="rounded-xl bg-slate-950/60 border border-slate-800 p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div class="space-y-2">
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Import Mode</div>
+            <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+              <input type="radio" name="importMode" value="replace" checked class="accent-indigo-500" />
+              <span>Replace full schedule (snapshots current schedule first)</span>
+            </label>
+            <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+              <input type="radio" name="importMode" value="merge" class="accent-indigo-500" />
+              <span>Merge / update only rooms listed in this file</span>
+            </label>
+          </div>
+          <div class="space-y-2">
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Preserve Live Admin Changes</div>
+            <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+              <input id="optPreserveNotices" type="checkbox" checked class="accent-indigo-500" />
+              <span>Keep existing Door Notices</span>
+            </label>
+            <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+              <input id="optPreserveOverrides" type="checkbox" checked class="accent-indigo-500" />
+              <span>Keep manual Room Color Overrides</span>
+            </label>
+            <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+              <input id="optPreserveAdminClasses" type="checkbox" checked class="accent-indigo-500" />
+              <span>Keep Admin-edited / added classes</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-800 max-h-80 overflow-y-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-800/80 text-xs uppercase text-slate-400 sticky top-0">
+              <tr>
+                <th class="px-3 py-2.5">Row</th>
+                <th class="px-3 py-2.5">Room</th>
+                <th class="px-3 py-2.5">Age Group</th>
+                <th class="px-3 py-2.5">Day &amp; Time</th>
+                <th class="px-3 py-2.5">Class</th>
+                <th class="px-3 py-2.5">Leader</th>
+              </tr>
+            </thead>
+            <tbody id="previewRowsBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- IMPORT HISTORY & ROLLBACK -->
       <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-          <h3 class="text-base font-semibold text-white">Loaded Schedule Preview</h3>
+          <div>
+            <h3 class="text-base font-semibold text-white">Import History &amp; One-Click Rollback</h3>
+            <p class="text-xs text-slate-400">Every publish automatically snapshots the previous schedule (last 10 kept).</p>
+          </div>
+          <button id="refreshHistoryBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+            Refresh
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
+              <tr>
+                <th class="px-4 py-3">Date</th>
+                <th class="px-4 py-3">Snapshot</th>
+                <th class="px-4 py-3">Uploaded By</th>
+                <th class="px-4 py-3">Previous State</th>
+                <th class="px-4 py-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="importHistoryBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+          <h3 class="text-base font-semibold text-white">Current Live Schedule</h3>
           <span id="tableCount" class="text-xs text-slate-400">0 rows</span>
         </div>
         <div class="overflow-x-auto">
@@ -1067,102 +1171,203 @@
       statusEl.classList.remove('hidden');
     }
 
-    function parseCancelledFlag(rawVal) {
-      const s = String(rawVal || '').trim().toLowerCase();
-      return s === 'yes' || s === 'true' || s === '1' || s === 'y';
+    let activePreviewToken = null;
+
+    function clearImportPreview() {
+      activePreviewToken = null;
+      document.getElementById('importPreviewPanel').classList.add('hidden');
     }
 
-    function handleSpreadsheetFile(file) {
-      if (!file || typeof XLSX === 'undefined') return;
-      const reader = new FileReader();
-      reader.onload = async function (e) {
-        try {
-          const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-          const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '' });
-          if (!rows.length) { showUploadStatus('The uploaded spreadsheet appears to be empty.', true); return; }
+    function renderImportPreview(data) {
+      activePreviewToken = data.previewToken || null;
+      const panel = document.getElementById('importPreviewPanel');
+      panel.classList.remove('hidden');
 
-          const newRooms = {};
-          const newSchedule = [];
-          rows.forEach(row => {
-            const roomId = String(row.Room || row.room || '').trim();
-            if (!roomId) return;
-            const roomName = String(row.RoomName || row.roomName || `Room ${roomId}`).trim();
-            const rawAge = String(row.AgeGroup || row.ageGroup || 'Adults').trim();
-            const ageGroupId = resolveAgeGroupIdByName(rawAge);
-            if (!newRooms[roomId]) {
-              newRooms[roomId] = { name: roomName, defaultAgeGroupId: ageGroupId, note: '' };
-            }
-            newSchedule.push({
-              room: roomId,
-              ageGroupId,
-              day: String(row.Day || row.day || 'Sunday').trim(),
-              start: normalizeTime(row.StartTime || row.startTime || '09:00'),
-              end: normalizeTime(row.EndTime || row.endTime || '10:00'),
-              title: String(row.ClassTitle || row.classTitle || 'Scheduled Class').trim(),
-              leader: String(row.Leader || row.leader || '').trim(),
-              cancelled: parseCancelledFlag(row.Cancelled || row.cancelled)
-            });
-          });
-          if (!newSchedule.length) { showUploadStatus('No valid rows found. Make sure your file has a "Room" column.', true); return; }
+      document.getElementById('previewFilename').textContent = `${data.filename} (${String(data.sourceType || '').toUpperCase()})`;
+      const s = data.summary || {};
+      document.getElementById('previewSummaryText').textContent =
+        `${s.roomsTotal || 0} rooms · ${s.classesTotal || 0} classes · ${s.errorsCount || 0} errors · ${s.warningsCount || 0} warnings`;
 
-          const res = await apiFetch('/api/schedule/replace', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ roomsMap: newRooms, scheduleList: newSchedule, preserveRoomOverrides: true })
-          });
-          if (res.status === 401) { handleAuthExpired(); return; }
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            showUploadStatus(data.error || 'Upload rejected by server.', true);
-            return;
-          }
-          lastStateEtag = null;
-          if (data.state) applyStatePayload(data.state);
-          else await fetchServerState(true);
-          showUploadStatus(`Synced ${newSchedule.length} classes across ${Object.keys(newRooms).length} rooms to SQLite and all iPads (existing room notices/overrides preserved).`, false);
-        } catch (err) {
-          showUploadStatus(`Could not read "${file.name}": ${err.message}`, true);
+      const commitBtn = document.getElementById('commitImportBtn');
+      commitBtn.disabled = !data.canCommit || !activePreviewToken;
+
+      const d = data.diff || {};
+      const badges = document.getElementById('previewDiffBadges');
+      badges.replaceChildren(
+        el('span', { className: 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30', text: `+${(d.roomsAdded || []).length} new rooms` }),
+        el('span', { className: 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30', text: `~${(d.roomsUpdated || []).length} updated rooms` }),
+        el('span', { className: 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700', text: `-${(d.roomsRemoved || []).length} rooms not in file` }),
+        el('span', { className: 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30', text: `${d.existingNoticesCount || 0} notices · ${d.existingColorOverridesCount || 0} color overrides · ${d.existingAdminClassesCount || 0} admin classes` })
+      );
+
+      const errBox = document.getElementById('previewErrorsBox');
+      const errList = document.getElementById('previewErrorsList');
+      errList.replaceChildren();
+      if (data.errors && data.errors.length) {
+        errBox.classList.remove('hidden');
+        data.errors.forEach(err => {
+          errList.appendChild(el('li', { text: `Row ${err.row} [${err.column}]: ${err.message}` }));
+        });
+      } else {
+        errBox.classList.add('hidden');
+      }
+
+      const warnBox = document.getElementById('previewWarningsBox');
+      const warnList = document.getElementById('previewWarningsList');
+      warnList.replaceChildren();
+      if (data.warnings && data.warnings.length) {
+        warnBox.classList.remove('hidden');
+        data.warnings.forEach(w => {
+          const prefix = w.row ? `Row ${w.row} [${w.column}]: ` : `[${w.column}]: `;
+          warnList.appendChild(el('li', { text: `${prefix}${w.message}` }));
+        });
+      } else {
+        warnBox.classList.add('hidden');
+      }
+
+      document.getElementById('previewOptionsBox').classList.toggle('hidden', !data.canCommit);
+
+      const tbody = document.getElementById('previewRowsBody');
+      tbody.replaceChildren();
+      (data.previewRows || []).forEach(row => {
+        const clsCell = el('td', { className: 'px-3 py-2 font-medium text-slate-100' }, [
+          el('span', { className: row.cancelled ? 'line-through text-rose-300' : '', text: row.title })
+        ]);
+        if (row.cancelled) {
+          clsCell.appendChild(el('span', { className: 'ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-500/20 text-rose-300', text: 'Cancelled' }));
         }
-      };
-      reader.readAsArrayBuffer(file);
+        tbody.appendChild(el('tr', { className: 'hover:bg-slate-800/40' }, [
+          el('td', { className: 'px-3 py-2 text-slate-500 tabular-nums', text: String(row.rowNum) }),
+          el('td', { className: 'px-3 py-2 font-medium text-white', text: row.roomName }),
+          el('td', { className: 'px-3 py-2' }, [
+            el('span', {
+              className: 'px-2 py-0.5 rounded-full text-xs font-semibold',
+              style: { backgroundColor: row.badgeBg, color: row.badgeText },
+              text: row.ageGroupLabel
+            })
+          ]),
+          el('td', { className: 'px-3 py-2 whitespace-nowrap', text: `${row.day} · ${formatTime12h(row.start)}–${formatTime12h(row.end)}` }),
+          clsCell,
+          el('td', { className: 'px-3 py-2 text-slate-400', text: row.leader || '—' })
+        ]));
+      });
+    }
+
+    async function handleSpreadsheetFile(file) {
+      if (!file) return;
+      showUploadStatus(`Validating "${file.name}" on server...`, false);
+      clearImportPreview();
+
+      const form = new FormData();
+      form.append('file', file);
+      try {
+        const res = await apiFetch('/api/import/preview', { method: 'POST', body: form });
+        if (res.status === 401) { handleAuthExpired(); return; }
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showUploadStatus(data.error || `Could not validate "${file.name}".`, true);
+          return;
+        }
+        renderImportPreview(data);
+        if (data.canCommit) {
+          showUploadStatus(`Validation passed for "${data.filename}". Review the preview below and click Publish Schedule to go live.`, false);
+        } else {
+          showUploadStatus(`Found ${data.errors.length} blocking error(s) in "${data.filename}". Fix them and re-upload.`, true);
+        }
+      } catch (err) {
+        showUploadStatus(`Upload error for "${file.name}": ${err.message}`, true);
+      }
+    }
+
+    async function commitStagedImport() {
+      if (!activePreviewToken) return;
+      const modeEl = document.querySelector('input[name="importMode"]:checked');
+      const mode = modeEl ? modeEl.value : 'replace';
+      const preserveRoomNotices = document.getElementById('optPreserveNotices').checked;
+      const preserveRoomOverrides = document.getElementById('optPreserveOverrides').checked;
+      const preserveAdminClasses = document.getElementById('optPreserveAdminClasses').checked;
+
+      const btn = document.getElementById('commitImportBtn');
+      btn.disabled = true;
+      btn.textContent = 'Publishing...';
+      try {
+        const res = await apiFetch('/api/import/commit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            previewToken: activePreviewToken,
+            mode,
+            preserveRoomNotices,
+            preserveRoomOverrides,
+            preserveAdminClasses
+          })
+        });
+        if (res.status === 401) { handleAuthExpired(); return; }
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showUploadStatus(data.error || 'Could not publish schedule.', true);
+          btn.disabled = false;
+          btn.textContent = 'Publish Schedule';
+          return;
+        }
+        clearImportPreview();
+        lastStateEtag = null;
+        if (data.state) applyStatePayload(data.state);
+        else await fetchServerState(true);
+        showUploadStatus(`Published "${data.filename}" (${data.mode} mode). Previous schedule saved as rollback snapshot #${data.snapshotId}.`, false);
+        fetchImportHistory();
+      } catch (err) {
+        showUploadStatus(`Publish error: ${err.message}`, true);
+      } finally {
+        btn.textContent = 'Publish Schedule';
+      }
+    }
+
+    async function fetchImportHistory() {
+      if (!isAdminUnlocked) return;
+      try {
+        const res = await apiFetch('/api/import/history?limit=10');
+        if (!res.ok) return;
+        const data = await res.json();
+        renderImportHistory(data.snapshots || []);
+      } catch (err) {}
+    }
+
+    function renderImportHistory(snapshots) {
+      const tbody = document.getElementById('importHistoryBody');
+      tbody.replaceChildren();
+      if (!snapshots.length) {
+        tbody.appendChild(el('tr', {}, [
+          el('td', { colspan: '5', className: 'px-4 py-4 text-center text-slate-500', text: 'No import snapshots yet. Your first publish will automatically create one.' })
+        ]));
+        return;
+      }
+      snapshots.forEach(snap => {
+        const s = snap.summary || {};
+        const prevText = `${s.previousRooms ?? '—'} rooms · ${s.previousClasses ?? '—'} classes`;
+        const rollbackBtn = el('button', {
+          type: 'button',
+          'data-rollback-snapshot': String(snap.id),
+          'data-rollback-name': snap.filename,
+          className: 'px-3 py-1 rounded-lg text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition',
+          text: 'Restore Previous'
+        });
+        tbody.appendChild(el('tr', { className: 'hover:bg-slate-800/40' }, [
+          el('td', { className: 'px-4 py-2.5 whitespace-nowrap text-slate-400', text: formatTimestampShort(snap.createdAt) }),
+          el('td', { className: 'px-4 py-2.5 font-medium text-white', text: `#${snap.id} — ${snap.filename}` }),
+          el('td', { className: 'px-4 py-2.5 text-slate-300', text: `@${snap.createdBy}` }),
+          el('td', { className: 'px-4 py-2.5 text-slate-400', text: prevText }),
+          el('td', { className: 'px-4 py-2.5 text-right whitespace-nowrap' }, [rollbackBtn])
+        ]));
+      });
     }
 
     function downloadSampleExcel() {
-      if (typeof XLSX === 'undefined') return;
-      const sampleRows = [
-        { Room: '101', RoomName: 'Room 101 — Chapel', AgeGroup: 'Adults', Day: 'Sunday', StartTime: '09:00', EndTime: '10:15', ClassTitle: 'Foundations of Faith', Leader: 'Pastor Mark Davis', Cancelled: 'NO' },
-        { Room: '101', RoomName: 'Room 101 — Chapel', AgeGroup: 'Adults', Day: 'Wednesday', StartTime: '18:00', EndTime: '19:30', ClassTitle: 'Midweek Prayer & Study', Leader: 'Pastor Mark Davis', Cancelled: 'NO' },
-        { Room: '102', RoomName: 'Room 102 — Youth Loft', AgeGroup: 'Teen', Day: 'Sunday', StartTime: '09:00', EndTime: '10:15', ClassTitle: 'High School Hangout', Leader: 'Tyler Brooks', Cancelled: 'NO' },
-        { Room: '204', RoomName: 'Room 204 — College Lounge', AgeGroup: 'College', Day: 'Sunday', StartTime: '09:30', EndTime: '10:45', ClassTitle: 'College Coffee & Study', Leader: 'Alex Rivera', Cancelled: 'NO' },
-        { Room: '105', RoomName: 'Room 105 — Kids Zone', AgeGroup: 'Kids', Day: 'Sunday', StartTime: '09:00', EndTime: '10:30', ClassTitle: 'Elementary Worship & Crafts', Leader: 'Emily Watson', Cancelled: 'NO' }
-      ];
-      const ws = XLSX.utils.json_to_sheet(sampleRows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
-      XLSX.writeFile(wb, 'classroom_schedule_template.xlsx');
+      window.location.href = '/api/template.xlsx';
     }
 
     function exportCurrentExcel() {
-      if (typeof XLSX === 'undefined') return;
-      const rows = scheduleList.map(item => {
-        const room = item.room ? (roomsMap[item.room] || { name: `Room ${item.room}` }) : { name: 'Unassigned' };
-        const ag = getTheme(item.ageGroupId);
-        return {
-          Room: item.room || '',
-          RoomName: room.name,
-          AgeGroup: ag.label,
-          Day: item.day,
-          StartTime: item.start,
-          EndTime: item.end,
-          ClassTitle: item.title,
-          Leader: item.leader,
-          Cancelled: item.cancelled ? 'YES' : 'NO'
-        };
-      });
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
-      XLSX.writeFile(wb, 'updated_classroom_schedule.xlsx');
+      window.location.href = '/api/export.xlsx';
     }
 
     function updateAuthUI() {
@@ -1209,6 +1414,9 @@
       document.getElementById('viewAdmin').classList.toggle('hidden', tab !== 'admin');
       document.getElementById('simulatorControls').classList.toggle('hidden', tab !== 'display');
       setTabClasses(tab);
+      if (tab === 'upload') {
+        fetchImportHistory();
+      }
       if (tab === 'admin') {
         renderAdminPanel();
         fetchAdminUsers();
@@ -1330,6 +1538,29 @@
     });
 
     document.getElementById('refreshAuditBtn').addEventListener('click', fetchAuditLog);
+    document.getElementById('cancelPreviewBtn').addEventListener('click', clearImportPreview);
+    document.getElementById('commitImportBtn').addEventListener('click', commitStagedImport);
+    document.getElementById('refreshHistoryBtn').addEventListener('click', fetchImportHistory);
+
+    document.getElementById('importHistoryBody').addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-rollback-snapshot]');
+      if (!btn) return;
+      const snapId = Number(btn.getAttribute('data-rollback-snapshot'));
+      const snapName = btn.getAttribute('data-rollback-name') || `#${snapId}`;
+      if (!window.confirm(`Restore the schedule to the state saved before "${snapName}" (snapshot #${snapId})?`)) return;
+      const res = await apiFetch(`/api/import/rollback/${snapId}`, { method: 'POST' });
+      if (res.status === 401) { handleAuthExpired(); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showUploadStatus(data.error || 'Rollback failed.', true);
+        return;
+      }
+      lastStateEtag = null;
+      if (data.state) applyStatePayload(data.state);
+      else await fetchServerState(true);
+      showUploadStatus(`Restored schedule from snapshot #${snapId} (${data.restoredRooms} rooms, ${data.restoredClasses} classes).`, false);
+      fetchImportHistory();
+    });
 
     document.getElementById('adminUndoBtn').addEventListener('click', async () => {
       if (!activeUndoAction) return;

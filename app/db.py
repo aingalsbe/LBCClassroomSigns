@@ -10,7 +10,7 @@ import time
 from flask import current_app, g
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 DEFAULT_AGE_GROUPS = [
     {
@@ -197,6 +197,21 @@ CREATE INDEX IF NOT EXISTS idx_classes_age_group ON classes(age_group_id);
 CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp DESC);
 """
 
+MIGRATION_V2_SQL = """
+CREATE TABLE IF NOT EXISTS staged_imports (
+    token TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    filename TEXT NOT NULL,
+    source_type TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    summary_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_staged_imports_expires ON staged_imports(expires_at);
+"""
+
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -361,6 +376,13 @@ def init_db(db_path: Path, legacy_json_path: Path | None = None, default_timezon
             version = conn.execute("PRAGMA user_version;").fetchone()[0]
             if version < 1:
                 for stmt in MIGRATION_V1_SQL.split(";"):
+                    sql = stmt.strip()
+                    if sql:
+                        conn.execute(sql)
+                conn.execute("PRAGMA user_version = 1;")
+                version = 1
+            if version < 2:
+                for stmt in MIGRATION_V2_SQL.split(";"):
                     sql = stmt.strip()
                     if sql:
                         conn.execute(sql)

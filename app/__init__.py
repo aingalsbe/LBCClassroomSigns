@@ -8,6 +8,7 @@ from app.db import close_db, connect, init_db
 from app.routes.audit import audit_bp
 from app.routes.auth import auth_bp
 from app.routes.classes import classes_bp
+from app.routes.imports import imports_bp
 from app.routes.rooms import rooms_bp
 from app.routes.settings import settings_bp
 from app.routes.state import state_bp
@@ -58,6 +59,7 @@ def create_app(test_config=None) -> Flask:
     app.register_blueprint(auth_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(audit_bp)
+    app.register_blueprint(imports_bp)
     app.register_blueprint(state_bp)
     app.register_blueprint(rooms_bp)
     app.register_blueprint(classes_bp)

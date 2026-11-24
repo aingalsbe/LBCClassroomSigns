@@ -81,7 +81,7 @@ def load_config(overrides=None):
         "DB_PATH": db_path,
         "LEGACY_JSON_PATH": legacy_json_path,
         "CHURCH_TIMEZONE": os.environ.get("CHURCH_TIMEZONE", "America/Chicago"),
-        "BUILD_ID": os.environ.get("BUILD_ID", "m2-security-hardening"),
+        "BUILD_ID": os.environ.get("BUILD_ID", "m3-excel-upload-pipeline"),
         "MAX_CONTENT_LENGTH": 5 * 1024 * 1024,
     }
 
