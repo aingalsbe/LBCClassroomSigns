@@ -204,6 +204,7 @@ def get_settings_dict(conn: sqlite3.Connection, default_tz: str = "America/Chica
     return {
         "theme": raw.get("theme", "dark"),
         "timezone": raw.get("timezone", default_tz),
+        "showLogo": raw.get("show_logo", "1") == "1",
     }
 
 

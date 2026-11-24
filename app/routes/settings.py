@@ -39,6 +39,9 @@ def update_settings():
             return jsonify({"error": f"Invalid IANA timezone: {tz!r}"}), 400
         updates["timezone"] = tz
 
+    if "showLogo" in body:
+        updates["show_logo"] = "1" if body["showLogo"] else "0"
+
     db = get_db()
     with write_transaction(db):
         for key, value in updates.items():

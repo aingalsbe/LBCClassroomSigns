@@ -222,8 +222,9 @@ def test_security_headers_and_zero_innerhtml(tmp_path):
         assert "Content-Security-Policy" in res.headers
 
     html = Path("public/index.html").read_text(encoding="utf-8")
-    script_part = html.split("<script>", 1)[1]
-    assert ".innerHTML" not in script_part
+    assert "<script>" not in html
+    app_js = Path("public/assets/app.js").read_text(encoding="utf-8")
+    assert ".innerHTML" not in app_js
 
 
 def test_audit_log_attribution_and_cli(tmp_path):
