@@ -54,6 +54,9 @@ def test_self_hosted_assets_strict_csp_and_manifest(tmp_path):
     assert 'src="/assets/app.js"' in html
     assert 'href="/assets/styles.css"' in html
     assert 'apple-mobile-web-app-capable' in html
+    # LBC logo belongs in the main app header, NOT inside the door kiosk display frame
+    assert 'id="headerLogoPlate"' in html
+    assert 'id="displayLogoPlate"' not in html
 
 
 def test_show_logo_setting_toggle(tmp_path):

@@ -495,7 +495,7 @@ function renderDisplay() {
   applyDisplayTheme();
   const isLight = (appSettings && appSettings.theme) === 'light';
   const showLogo = appSettings.showLogo !== false;
-  const logoPlate = document.getElementById('displayLogoPlate');
+  const logoPlate = document.getElementById('headerLogoPlate');
   if (logoPlate) logoPlate.classList.toggle('hidden', !showLogo);
 
   const ipadFrame = document.getElementById('ipadFrame');
@@ -1743,7 +1743,7 @@ async function saveAppSettings(changes, msg) {
 document.getElementById('themeDarkBtn').addEventListener('click', () => saveAppSettings({ theme: 'dark' }, 'Door Display theme set to Dark (default).'));
 document.getElementById('themeLightBtn').addEventListener('click', () => saveAppSettings({ theme: 'light' }, 'Door Display theme set to Light (warm off-white).'));
 document.getElementById('churchTzSelect').addEventListener('change', (e) => saveAppSettings({ timezone: e.target.value }, `Church timezone set to ${e.target.value}.`));
-document.getElementById('showLogoCheck').addEventListener('change', (e) => saveAppSettings({ showLogo: e.target.checked }, `Church logo ${e.target.checked ? 'enabled' : 'hidden'} on Door Displays.`));
+document.getElementById('showLogoCheck').addEventListener('change', (e) => saveAppSettings({ showLogo: e.target.checked }, `Church logo ${e.target.checked ? 'enabled' : 'hidden'} in app header.`));
 
 // Rooms CRUD: Create & Clear All Notices
 document.getElementById('createRoomForm').addEventListener('submit', async (e) => {

@@ -11,7 +11,7 @@ A production-ready, Dockerized digital signage web app for **Lenexa Baptist Chur
 
 ## Key Capabilities (v1.0)
 - **Resilient iPad Door Display (`/`):**
-  - Public read-only view supporting **Dark (default)** and **Light (`#FAF8F4` warm off-white)** themes toggleable in Admin, plus optional **LBC Church Logo** plate.
+  - Public read-only view supporting **Dark (default)** and **Light (`#FAF8F4` warm off-white)** themes toggleable in Admin; the **LBC Church Logo** appears in the main app header across all pages (and stays hidden on wall-mounted door kiosks).
   - Per-class age-group color resolution (multi-age rooms like `WC 101`, `224`, `230`, `232-234` automatically switch banner colors throughout Sunday morning) with optional manual room overrides.
   - Live progress bar (`"XX min left"` / `"Ending soon"`), 30-minute `"Up Next · Starts in X min"` countdown, server-synced `America/Chicago` clock, `ETag` (`304 Not Modified`) polling every 15s, **`localStorage` offline fallback** during Wi-Fi drops, and 100% self-hosted CSS/JS assets (zero external runtime CDNs).
 - **Hardened Server-Side `.xlsx` & `.csv` Uploader (`🔒 Admin`):**

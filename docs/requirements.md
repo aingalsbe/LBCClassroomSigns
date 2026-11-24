@@ -13,7 +13,7 @@ Provide a secure, concurrency-safe, easy-to-update digital signage system for **
 
 2. **Per-Room iPad Door Display (30+ Rooms)**
    - Dedicated full-screen kiosk URL (`/?room=<ID>&kiosk=1`) with Safari Home Screen `manifest.webmanifest`.
-   - Displays **LBC Logo plate** (toggleable), **Room Name**, **Age Group Badge**, **Status** (`In Session`, `Up Next`, `Cancelled`, `Room Open`), **Current Class** (title, time window, leader, live progress bar with `"Ending soon"` <= 5 min), **30-min Up Next countdown**, **Next Class**, and **Server-Synced `America/Chicago` Clock**.
+   - Displays **Room Name**, **Age Group Badge**, **Status** (`In Session`, `Up Next`, `Cancelled`, `Room Open`), **Current Class** (title, time window, leader, live progress bar with `"Ending soon"` <= 5 min), **30-min Up Next countdown**, **Next Class**, and **Server-Synced `America/Chicago` Clock** (the LBC logo lives in the main web header across all pages, not on door kiosks).
    - Supports admin-toggleable **Dark (default)** and **Light (`#FAF8F4` warm off-white)** themes.
    - Polls `/api/state` every 15 seconds with `ETag` (`304 Not Modified`), auto-reloads on new deploys (`buildId`), and falls back to `localStorage` cache with an `"Offline · showing saved schedule"` footer pill during church Wi-Fi drops.
 
