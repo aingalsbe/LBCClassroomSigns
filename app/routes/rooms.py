@@ -182,3 +182,31 @@ def delete_room(room_id: str):
             "stateVersion": state_version,
         }
     )
+
+
+@rooms_bp.route("/api/rooms/clear-notices", methods=["POST"])
+@require_admin
+def clear_all_notices():
+    db = get_db()
+    now = utc_now_iso()
+    with write_transaction(db):
+        cleared = db.execute("SELECT COUNT(*) FROM rooms WHERE TRIM(note) != ''").fetchone()[0]
+        if cleared > 0:
+            db.execute(
+                "UPDATE rooms SET note = '', version = version + 1, updated_at = ? WHERE TRIM(note) != ''",
+                (now,),
+            )
+            state_version = bump_state_version(db)
+            log_audit(
+                db,
+                action="room_notices_cleared",
+                target_type="room",
+                target_id="all",
+                details={"clearedCount": cleared},
+            )
+        else:
+            from app.db import get_state_version
+
+            state_version = get_state_version(db)
+
+    return jsonify({"ok": True, "clearedCount": cleared, "stateVersion": state_version})

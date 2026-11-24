@@ -68,22 +68,22 @@
   </header>
 
   <!-- VIEW 1: IPAD WALL DISPLAY -->
-  <main id="viewDisplay" class="flex-1 flex items-center justify-center p-4 sm:p-8 relative">
+  <main id="viewDisplay" class="flex-1 flex items-center justify-center p-4 sm:p-8 relative transition-colors duration-300">
     <div id="ipadFrame" class="w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-slate-800 transition-colors duration-300 bg-slate-900">
       <div id="ageBanner" class="px-6 sm:px-10 py-6 sm:py-8 flex flex-wrap items-center justify-between gap-4 transition-colors duration-300 bg-indigo-700">
         <div>
           <div class="flex items-center gap-3 mb-1">
-            <span id="ageBadge" class="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider bg-white/20 text-white backdrop-blur-sm">Adults</span>
-            <span id="statusDot" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-white/90">
+            <span id="ageBadge" class="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider bg-white/20 backdrop-blur-sm">Adults</span>
+            <span id="statusDot" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium opacity-90">
               <span id="statusIndicator" class="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse"></span>
               <span id="statusText">In Session</span>
             </span>
           </div>
-          <h1 id="roomTitle" class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">Room 101</h1>
+          <h1 id="roomTitle" class="text-3xl sm:text-5xl font-extrabold tracking-tight">Room 101</h1>
         </div>
-        <div class="text-left sm:text-right text-white/95">
+        <div class="text-left sm:text-right">
           <div id="displayTime" class="text-2xl sm:text-4xl font-bold tabular-nums">9:30 AM</div>
-          <div id="displayDay" class="text-sm sm:text-base font-medium text-white/80">Sunday</div>
+          <div id="displayDay" class="text-sm sm:text-base font-medium opacity-80">Sunday</div>
         </div>
       </div>
 
@@ -92,22 +92,22 @@
         <span id="roomNoteText"></span>
       </div>
 
-      <div class="p-6 sm:p-10 space-y-6 bg-slate-900">
-        <div class="rounded-2xl bg-slate-800/70 border border-slate-700/70 p-6 sm:p-8">
+      <div id="displayBody" class="p-6 sm:p-10 space-y-6 bg-slate-900 transition-colors duration-300">
+        <div id="currentClassCard" class="rounded-2xl bg-slate-800/70 border border-slate-700/70 p-6 sm:p-8 transition-colors duration-300">
           <div class="flex items-center justify-between gap-2 mb-2">
-            <div class="text-xs font-semibold uppercase tracking-widest text-slate-400">Current Class</div>
+            <div id="currentClassHeading" class="text-xs font-semibold uppercase tracking-widest text-slate-400">Current Class</div>
             <span id="cancelledPill" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/40">Cancelled</span>
           </div>
           <h2 id="currentClass" class="text-2xl sm:text-4xl font-bold text-white mb-3">—</h2>
-          <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm sm:text-base text-slate-300">
-            <div class="flex items-center gap-2"><span class="text-slate-400">Time:</span><span id="currentWindow" class="font-semibold text-white">—</span></div>
-            <div class="flex items-center gap-2"><span class="text-slate-400">Leader:</span><span id="currentLeader" class="font-semibold text-white">—</span></div>
+          <div id="currentMetaRow" class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm sm:text-base text-slate-300">
+            <div class="flex items-center gap-2"><span id="currentTimeLabel" class="text-slate-400">Time:</span><span id="currentWindow" class="font-semibold text-white">—</span></div>
+            <div class="flex items-center gap-2"><span id="currentLeaderLabel" class="text-slate-400">Leader:</span><span id="currentLeader" class="font-semibold text-white">—</span></div>
           </div>
         </div>
 
-        <div class="rounded-2xl bg-slate-800/40 border border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div id="upNextCard" class="rounded-2xl bg-slate-800/40 border border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3 transition-colors duration-300">
           <div class="flex items-center gap-3">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Up Next</span>
+            <span id="upNextLabel" class="text-xs font-bold uppercase tracking-wider text-slate-400">Up Next</span>
             <span id="nextClass" class="text-base sm:text-lg font-semibold text-slate-200">—</span>
           </div>
           <span id="nextWindow" class="text-sm font-medium text-slate-400"></span>
@@ -305,17 +305,24 @@
   <!-- VIEW 4: ADMIN PANEL -->
   <section id="viewAdmin" class="hidden flex-1 p-4 sm:p-8">
     <div class="max-w-6xl mx-auto space-y-6">
-      <div class="rounded-2xl bg-slate-900 border border-slate-800 p-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 class="text-xl sm:text-2xl font-bold text-white">Admin Control Panel</h2>
-          <p class="text-sm text-slate-400 mt-1">Override room age colors, copy direct iPad kiosk links, or cancel &amp; edit individual classes.</p>
+      <div class="rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-white">Admin Control Panel</h2>
+            <p class="text-sm text-slate-400 mt-1">Manage Age Groups &amp; Colors, Rooms, Classes, Display Theme, Staff Accounts, and Activity.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5">
+            <span id="adminSaveStatus" class="hidden inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border"></span>
+            <button id="exportExcelBtn" type="button" class="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
+              Export .xlsx
+            </button>
+          </div>
         </div>
-        <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-          <span id="adminSaveStatus" class="hidden inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border"></span>
-          <input id="adminSearch" type="search" placeholder="Filter rooms (e.g. 101, WC 101)..." class="flex-1 sm:w-56 bg-slate-800 text-slate-100 text-sm rounded-xl px-3.5 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          <button id="exportExcelBtn" type="button" class="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
-            Export .xlsx
-          </button>
+        <div class="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-4">
+          <button id="subTabRooms" type="button" data-admin-subtab="rooms" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-indigo-600 text-white transition">Rooms</button>
+          <button id="subTabClasses" type="button" data-admin-subtab="classes" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">Classes</button>
+          <button id="subTabAgeGroups" type="button" data-admin-subtab="agegroups" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">Age Groups &amp; Colors</button>
+          <button id="subTabSettings" type="button" data-admin-subtab="settings" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">Settings, Staff &amp; Activity</button>
         </div>
       </div>
 
@@ -324,115 +331,396 @@
         <button id="adminUndoBtn" type="button" class="hidden px-2.5 py-1 rounded-lg text-xs font-bold bg-white/10 hover:bg-white/20 text-white transition">Undo</button>
       </div>
 
-      <div class="space-y-3">
-        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Rooms — Age Color Overrides, Door Notices &amp; iPad Links</h3>
+      <!-- SUB-TAB 1: ROOMS -->
+      <div id="adminSubRooms" class="space-y-6">
+        <div class="rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-semibold text-white">Add Room</h3>
+              <p class="text-xs text-slate-400">Rooms live independently and can start with 0 scheduled classes.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <input id="adminSearch" type="search" placeholder="Filter rooms (e.g. WC 101)..." class="w-48 sm:w-56 bg-slate-800 text-slate-100 text-sm rounded-xl px-3 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <button id="clearNoticesBtn" type="button" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition">
+                Clear All Door Notices
+              </button>
+            </div>
+          </div>
+          <form id="createRoomForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Room ID</span>
+              <input id="newRoomId" type="text" placeholder="e.g. WC 101" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Display Name</span>
+              <input id="newRoomName" type="text" placeholder="e.g. WC 101 (Cafe)" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Default Empty-Room Age Group</span>
+              <select id="newRoomDefaultAge" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Door Notice (Optional)</span>
+              <input id="newRoomNote" type="text" placeholder="Optional notice" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
+              + Add Room
+            </button>
+          </form>
+        </div>
+
         <div id="adminRoomsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
 
-      <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+      <!-- SUB-TAB 2: CLASSES -->
+      <div id="adminSubClasses" class="hidden space-y-6">
+        <div class="rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4">
           <div>
-            <h3 class="text-base font-semibold text-white">Scheduled Classes — Cancellations &amp; Edits</h3>
-            <p class="text-xs text-slate-400">Edits save automatically with conflict checks. Click Cancel to immediately flag a class on its room's iPad screen.</p>
+            <h3 class="text-base font-semibold text-white">Add Class</h3>
+            <p class="text-xs text-slate-400">Every class requires an Age Group and can be assigned to a Room now or left Unassigned.</p>
           </div>
-          <label class="flex items-center gap-2 text-xs text-slate-400">
-            <span>Filter Room</span>
-            <select id="adminRoomFilter" class="bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
-          </label>
+          <form id="createClassForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Class Title *</span>
+              <input id="newClassTitle" type="text" placeholder="e.g. Empty Nesters 5" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Age Group *</span>
+              <select id="newClassAgeGroup" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Assigned Room</span>
+              <select id="newClassRoom" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Leader(s)</span>
+              <input id="newClassLeader" type="text" placeholder="e.g. Greg Guthrie &amp; Arlan Suderman" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Day *</span>
+              <select id="newClassDay" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="Sunday">Sunday</option>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+              </select>
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Start Time *</span>
+              <input id="newClassStart" type="time" value="09:30" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">End Time *</span>
+              <input id="newClassEnd" type="time" value="10:45" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
+              + Add Class
+            </button>
+          </form>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
-              <tr>
-                <th class="px-4 py-3">Room</th>
-                <th class="px-4 py-3">Age Group</th>
-                <th class="px-4 py-3">Day &amp; Time</th>
-                <th class="px-4 py-3">Class Title</th>
-                <th class="px-4 py-3">Leader</th>
-                <th class="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="adminClassesBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
-          </table>
+
+        <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-semibold text-white">Scheduled Classes — Edit, Move / Swap &amp; Cancel</h3>
+              <p class="text-xs text-slate-400">Inline edits save with overlap &amp; conflict checks. Use Swap to move or exchange rooms atomically.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2.5">
+              <select id="adminRoomFilter" class="bg-slate-800 text-slate-100 text-xs sm:text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+              <select id="adminAgeFilter" class="bg-slate-800 text-slate-100 text-xs sm:text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
+                <tr>
+                  <th class="px-3 py-3">Room</th>
+                  <th class="px-3 py-3">Age Group</th>
+                  <th class="px-3 py-3">Day &amp; Time</th>
+                  <th class="px-3 py-3">Class Title</th>
+                  <th class="px-3 py-3">Leader</th>
+                  <th class="px-3 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminClassesBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- STAFF ADMIN ACCOUNTS (Super Admin Only) -->
-      <div id="adminUsersSection" class="hidden rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 class="text-base font-semibold text-white">Staff Admin Accounts</h3>
-            <p class="text-xs text-slate-400">Create named accounts so every schedule upload, edit, and cancellation is tracked in the audit log.</p>
+      <!-- SUB-TAB 3: AGE GROUPS & COLORS -->
+      <div id="adminSubAgeGroups" class="hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <form id="ageGroupForm" class="lg:col-span-3 rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 id="agFormHeading" class="text-base font-bold text-white">Create Age Group</h3>
+              <button id="agResetFormBtn" type="button" class="hidden text-xs font-semibold text-slate-400 hover:text-white">Cancel Edit</button>
+            </div>
+            <input id="agEditId" type="hidden" value="" />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="block text-xs text-slate-400">
+                <span class="block mb-1 text-slate-300">Display Name *</span>
+                <input id="agLabelInput" type="text" placeholder="e.g. Preschool, Seniors" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-3 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </label>
+              <label class="block text-xs text-slate-400">
+                <span class="block mb-1 text-slate-300">Banner Color (#RRGGBB)</span>
+                <div class="flex items-center gap-2">
+                  <input id="agColorPicker" type="color" value="#4338ca" class="h-9 w-12 rounded-lg bg-slate-800 border border-slate-700 cursor-pointer" />
+                  <input id="agColorHex" type="text" value="#4338ca" pattern="^#[0-9a-fA-F]{6}$" required class="flex-1 bg-slate-800 text-slate-100 font-mono text-sm rounded-lg px-3 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+              </label>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="text-xs text-slate-400">Curated Accessible Swatches (WCAG AA+)</div>
+              <div id="agPaletteSwatches" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                <input id="agAutoTextCheck" type="checkbox" checked class="accent-indigo-500" />
+                <span>Auto-pick highest-contrast text color (Recommended)</span>
+              </label>
+              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                <input id="agIsDefaultCheck" type="checkbox" class="accent-indigo-500" />
+                <span>Use as default fallback group</span>
+              </label>
+            </div>
+
+            <label id="agCustomTextWrap" class="hidden block text-xs text-slate-400">
+              <span class="block mb-1 text-slate-300">Custom Banner Text Color (#RRGGBB)</span>
+              <div class="flex items-center gap-2 max-w-xs">
+                <input id="agTextPicker" type="color" value="#ffffff" class="h-9 w-12 rounded-lg bg-slate-800 border border-slate-700 cursor-pointer" />
+                <input id="agTextHex" type="text" value="#ffffff" pattern="^#[0-9a-fA-F]{6}$" class="flex-1 bg-slate-800 text-slate-100 font-mono text-sm rounded-lg px-3 py-2 border border-slate-700" />
+              </div>
+            </label>
+
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1 text-slate-300">Excel Import Aliases (comma-separated)</span>
+              <input id="agAliasesInput" type="text" placeholder="e.g. Senior Adults, Senior Ladies, 65+" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-3 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+
+            <div class="flex items-center justify-between gap-3 pt-1">
+              <span id="agContrastBadge" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border"></span>
+              <button id="agSubmitBtn" type="submit" class="px-5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
+                Create Age Group
+              </button>
+            </div>
+          </form>
+
+          <!-- LIVE MINI DOOR SIGN PREVIEW -->
+          <div class="lg:col-span-2 rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Live Door Sign Preview</h3>
+              <button id="agPreviewThemeBtn" type="button" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:text-white">
+                Preview: Dark
+              </button>
+            </div>
+            <div id="agMiniFrame" class="rounded-2xl overflow-hidden border border-slate-700 shadow-lg bg-slate-900">
+              <div id="agMiniBanner" class="px-5 py-4 flex items-center justify-between" style="background-color:#4338ca;color:#ffffff">
+                <div>
+                  <span id="agMiniBadge" class="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-white/20">Adults</span>
+                  <div class="text-xl font-extrabold mt-1">WC 101 (Cafe)</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-lg font-bold tabular-nums">9:30 AM</div>
+                  <div class="text-xs opacity-80">Sunday</div>
+                </div>
+              </div>
+              <div id="agMiniBody" class="p-4 space-y-2 bg-slate-900 text-white">
+                <div class="text-[10px] uppercase tracking-widest opacity-60 font-semibold">Current Class</div>
+                <div class="text-lg font-bold">Empty Nesters 5</div>
+                <div class="text-xs opacity-75">9:30 AM – 10:45 AM · Greg Guthrie &amp; Arlan Suderman</div>
+              </div>
+            </div>
+            <p class="text-xs text-slate-400">
+              Order below controls both dropdown order and Excel import alias priority (top group wins first).
+            </p>
           </div>
         </div>
-        <form id="createUserForm" class="p-6 border-b border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
-          <label class="block text-xs text-slate-400">
-            <span class="block mb-1">Username</span>
-            <input id="newUsername" type="text" placeholder="e.g. justin" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          </label>
-          <label class="block text-xs text-slate-400">
-            <span class="block mb-1">Display Name</span>
-            <input id="newDisplayName" type="text" placeholder="e.g. Justin Pedigo" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          </label>
-          <label class="block text-xs text-slate-400">
-            <span class="block mb-1">Temporary Password (10+ chars)</span>
-            <input id="newUserPassword" type="password" placeholder="Strong temp password" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          </label>
-          <label class="block text-xs text-slate-400">
-            <span class="block mb-1">Role</span>
-            <select id="newUserRole" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="admin">Admin</option>
-              <option value="super_admin">Super Admin</option>
-            </select>
-          </label>
-          <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
-            Add Staff Account
-          </button>
-        </form>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
-              <tr>
-                <th class="px-4 py-3">User</th>
-                <th class="px-4 py-3">Role</th>
-                <th class="px-4 py-3">Status</th>
-                <th class="px-4 py-3">Last Login</th>
-                <th class="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="adminUsersBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
-          </table>
+
+        <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-800">
+            <h3 class="text-base font-semibold text-white">Configured Age Groups</h3>
+            <p class="text-xs text-slate-400">Changes sync to all 30+ iPads automatically. Deleting an in-use group prompts for safe reassignment.</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
+                <tr>
+                  <th class="px-4 py-3">Order</th>
+                  <th class="px-4 py-3">Age Group &amp; Color</th>
+                  <th class="px-4 py-3">Contrast</th>
+                  <th class="px-4 py-3">Import Aliases</th>
+                  <th class="px-4 py-3">Usage</th>
+                  <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminAgeGroupsBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- RECENT ACTIVITY / AUDIT LOG -->
-      <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+      <!-- SUB-TAB 4: SETTINGS, STAFF & ACTIVITY -->
+      <div id="adminSubSettings" class="hidden space-y-6">
+        <div class="rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4">
           <div>
-            <h3 class="text-base font-semibold text-white">Recent Activity (Audit Log)</h3>
-            <p class="text-xs text-slate-400">Tracks admin sign-ins, failed attempts, uploads, cancellations, and edits.</p>
+            <h3 class="text-base font-semibold text-white">Door Display Appearance &amp; Timezone</h3>
+            <p class="text-xs text-slate-400">Changes apply to every wall-mounted iPad automatically on its next poll.</p>
           </div>
-          <button id="refreshAuditBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
-            Refresh
-          </button>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+            <div>
+              <div class="text-xs font-medium text-slate-300 mb-2">iPad Door Display Theme</div>
+              <div class="inline-flex rounded-xl bg-slate-800 p-1 border border-slate-700">
+                <button id="themeDarkBtn" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition">Dark (Default)</button>
+                <button id="themeLightBtn" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">Light (Warm Off-White)</button>
+              </div>
+            </div>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1.5 text-slate-300">Church Timezone</span>
+              <select id="churchTzSelect" class="w-full bg-slate-800 text-slate-100 text-sm rounded-xl px-3 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="America/Chicago">America/Chicago (Central — Lenexa, KS)</option>
+                <option value="America/New_York">America/New_York (Eastern)</option>
+                <option value="America/Denver">America/Denver (Mountain)</option>
+                <option value="America/Los_Angeles">America/Los_Angeles (Pacific)</option>
+              </select>
+            </label>
+          </div>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs sm:text-sm">
-            <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
-              <tr>
-                <th class="px-4 py-3">Time</th>
-                <th class="px-4 py-3">User</th>
-                <th class="px-4 py-3">Action</th>
-                <th class="px-4 py-3">Target</th>
-                <th class="px-4 py-3">IP</th>
-              </tr>
-            </thead>
-            <tbody id="adminAuditBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
-          </table>
+
+        <!-- STAFF ADMIN ACCOUNTS (Super Admin Only) -->
+        <div id="adminUsersSection" class="hidden rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-semibold text-white">Staff Admin Accounts</h3>
+              <p class="text-xs text-slate-400">Create named accounts so every schedule upload, edit, and cancellation is tracked in the audit log.</p>
+            </div>
+          </div>
+          <form id="createUserForm" class="p-6 border-b border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Username</span>
+              <input id="newUsername" type="text" placeholder="e.g. justin" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Display Name</span>
+              <input id="newDisplayName" type="text" placeholder="e.g. Justin Pedigo" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Temporary Password (10+ chars)</span>
+              <input id="newUserPassword" type="password" placeholder="Strong temp password" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Role</span>
+              <select id="newUserRole" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="admin">Admin</option>
+                <option value="super_admin">Super Admin</option>
+              </select>
+            </label>
+            <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
+              Add Staff Account
+            </button>
+          </form>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
+                <tr>
+                  <th class="px-4 py-3">User</th>
+                  <th class="px-4 py-3">Role</th>
+                  <th class="px-4 py-3">Status</th>
+                  <th class="px-4 py-3">Last Login</th>
+                  <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminUsersBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- RECENT ACTIVITY / AUDIT LOG -->
+        <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-semibold text-white">Recent Activity (Audit Log)</h3>
+              <p class="text-xs text-slate-400">Tracks admin sign-ins, failed attempts, uploads, cancellations, age-group updates, and edits.</p>
+            </div>
+            <button id="refreshAuditBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+              Refresh
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
+                <tr>
+                  <th class="px-4 py-3">Time</th>
+                  <th class="px-4 py-3">User</th>
+                  <th class="px-4 py-3">Action</th>
+                  <th class="px-4 py-3">Target</th>
+                  <th class="px-4 py-3">IP</th>
+                </tr>
+              </thead>
+              <tbody id="adminAuditBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   </section>
+
+  <!-- MOVE / SWAP CLASS MODAL -->
+  <div id="swapModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <form id="swapForm" class="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white">Move or Swap Room</h3>
+        <button id="closeSwapModalBtn" type="button" class="text-slate-400 hover:text-white text-sm font-semibold">Close</button>
+      </div>
+      <p id="swapClassSummary" class="text-xs text-slate-300 bg-slate-800/80 rounded-xl px-3 py-2 border border-slate-700"></p>
+      <div class="space-y-2 text-sm">
+        <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+          <input type="radio" name="swapAction" value="move" checked class="accent-indigo-500" />
+          <span>Move to another room (or Unassigned)</span>
+        </label>
+        <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+          <input type="radio" name="swapAction" value="exchange" class="accent-indigo-500" />
+          <span>Exchange rooms with another class</span>
+        </label>
+      </div>
+      <label id="swapTargetRoomWrap" class="block text-xs text-slate-400">
+        <span class="block mb-1 text-slate-300">Target Room</span>
+        <select id="swapTargetRoomSelect" class="w-full bg-slate-800 text-slate-100 text-sm rounded-xl px-3 py-2 border border-slate-700"></select>
+      </label>
+      <label id="swapExchangeWrap" class="hidden block text-xs text-slate-400">
+        <span class="block mb-1 text-slate-300">Exchange With Class</span>
+        <select id="swapExchangeClassSelect" class="w-full bg-slate-800 text-slate-100 text-sm rounded-xl px-3 py-2 border border-slate-700"></select>
+      </label>
+      <div id="swapError" class="hidden rounded-xl px-3 py-2 text-xs font-medium bg-rose-500/15 text-rose-300 border border-rose-500/30"></div>
+      <button type="submit" class="w-full py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
+        Apply Room Change
+      </button>
+    </form>
+  </div>
+
+  <!-- DELETE AGE GROUP REASSIGN MODAL -->
+  <div id="deleteAgeModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <form id="deleteAgeForm" class="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white">Reassign &amp; Delete Age Group</h3>
+        <button id="closeDeleteAgeModalBtn" type="button" class="text-slate-400 hover:text-white text-sm font-semibold">Close</button>
+      </div>
+      <p id="deleteAgeSummary" class="text-xs text-amber-200 bg-amber-500/15 border border-amber-500/30 rounded-xl px-3 py-2"></p>
+      <label class="block text-xs text-slate-400">
+        <span class="block mb-1 text-slate-300">Reassign existing classes &amp; rooms to:</span>
+        <select id="deleteAgeReassignSelect" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-xl px-3 py-2 border border-slate-700"></select>
+      </label>
+      <div class="flex justify-end gap-2">
+        <button id="cancelDeleteAgeBtn" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">Cancel</button>
+        <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white">Reassign &amp; Delete</button>
+      </div>
+    </form>
+  </div>
 
   <!-- CHANGE PASSWORD MODAL -->
   <div id="passwordModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -757,21 +1045,51 @@
     function populateSelectors() {
       const roomSelect = document.getElementById('roomSelect');
       const adminRoomFilter = document.getElementById('adminRoomFilter');
+      const adminAgeFilter = document.getElementById('adminAgeFilter');
+      const newRoomDefaultAge = document.getElementById('newRoomDefaultAge');
+      const newClassAgeGroup = document.getElementById('newClassAgeGroup');
+      const newClassRoom = document.getElementById('newClassRoom');
+
       const prevRoom = roomSelect.value || new URLSearchParams(window.location.search).get('room');
       const prevAdminFilter = adminRoomFilter.value;
+      const prevAgeFilter = adminAgeFilter ? adminAgeFilter.value : 'ALL';
 
       roomSelect.replaceChildren();
       adminRoomFilter.replaceChildren(
         el('option', { value: 'ALL', text: 'All Rooms' }),
         el('option', { value: 'UNASSIGNED', text: 'Unassigned Classes' })
       );
+      if (newClassRoom) {
+        newClassRoom.replaceChildren(el('option', { value: '', text: 'Unassigned (Assign Later)' }));
+      }
 
       roomsList.forEach(room => {
         const shortName = room.name.replace(/^Room\s+\S+\s*—\s*/i, '');
         const label = shortName === room.name ? room.name : `${room.id} — ${shortName}`;
         roomSelect.appendChild(el('option', { value: room.id, text: label }));
         adminRoomFilter.appendChild(el('option', { value: room.id, text: label }));
+        if (newClassRoom) newClassRoom.appendChild(el('option', { value: room.id, text: label }));
       });
+
+      if (adminAgeFilter) {
+        adminAgeFilter.replaceChildren(el('option', { value: 'ALL', text: 'All Age Groups' }));
+        ageGroups.forEach(ag => adminAgeFilter.appendChild(el('option', { value: ag.id, text: ag.label })));
+        if (prevAgeFilter === 'ALL' || ageGroupsMap[prevAgeFilter]) adminAgeFilter.value = prevAgeFilter || 'ALL';
+      }
+
+      if (newRoomDefaultAge) {
+        const prevDef = newRoomDefaultAge.value;
+        newRoomDefaultAge.replaceChildren(el('option', { value: '', text: 'None (Neutral when empty)' }));
+        ageGroups.forEach(ag => newRoomDefaultAge.appendChild(el('option', { value: ag.id, text: ag.label })));
+        if (prevDef && ageGroupsMap[prevDef]) newRoomDefaultAge.value = prevDef;
+      }
+
+      if (newClassAgeGroup) {
+        const prevAg = newClassAgeGroup.value;
+        newClassAgeGroup.replaceChildren();
+        ageGroups.forEach(ag => newClassAgeGroup.appendChild(el('option', { value: ag.id, text: ag.label, selected: ag.isDefault })));
+        if (prevAg && ageGroupsMap[prevAg]) newClassAgeGroup.value = prevAg;
+      }
 
       if (prevRoom && roomsMap[prevRoom]) roomSelect.value = prevRoom;
       if (prevAdminFilter === 'ALL' || prevAdminFilter === 'UNASSIGNED' || roomsMap[prevAdminFilter]) {
@@ -790,7 +1108,58 @@
       document.getElementById('datasetBadge').textContent = `${roomsList.length} rooms · ${scheduleList.length} classes`;
     }
 
+    function applyDisplayTheme() {
+      const isLight = (appSettings && appSettings.theme) === 'light';
+      const view = document.getElementById('viewDisplay');
+      const frame = document.getElementById('ipadFrame');
+      const body = document.getElementById('displayBody');
+      const card = document.getElementById('currentClassCard');
+      const nextCard = document.getElementById('upNextCard');
+
+      view.style.backgroundColor = isLight ? '#FAF8F4' : '';
+      frame.className = isLight
+        ? 'w-full max-w-4xl rounded-3xl overflow-hidden shadow-xl border border-stone-200 transition-colors duration-300 bg-white'
+        : 'w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-slate-800 transition-colors duration-300 bg-slate-900';
+      body.className = isLight
+        ? 'p-6 sm:p-10 space-y-6 bg-[#FAF8F4] transition-colors duration-300'
+        : 'p-6 sm:p-10 space-y-6 bg-slate-900 transition-colors duration-300';
+      card.className = isLight
+        ? 'rounded-2xl bg-white border border-stone-200 p-6 sm:p-8 shadow-sm transition-colors duration-300'
+        : 'rounded-2xl bg-slate-800/70 border border-slate-700/70 p-6 sm:p-8 transition-colors duration-300';
+      nextCard.className = isLight
+        ? 'rounded-2xl bg-white border border-stone-200 px-6 py-4 flex flex-wrap items-center justify-between gap-3 shadow-sm transition-colors duration-300'
+        : 'rounded-2xl bg-slate-800/40 border border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3 transition-colors duration-300';
+
+      document.getElementById('currentClassHeading').className = isLight
+        ? 'text-xs font-semibold uppercase tracking-widest text-[#5B6270]'
+        : 'text-xs font-semibold uppercase tracking-widest text-slate-400';
+      document.getElementById('currentTimeLabel').className = isLight ? 'text-[#5B6270]' : 'text-slate-400';
+      document.getElementById('currentLeaderLabel').className = isLight ? 'text-[#5B6270]' : 'text-slate-400';
+      document.getElementById('currentWindow').className = isLight ? 'font-semibold text-[#1C1F24]' : 'font-semibold text-white';
+      document.getElementById('currentLeader').className = isLight ? 'font-semibold text-[#1C1F24]' : 'font-semibold text-white';
+      document.getElementById('upNextLabel').className = isLight
+        ? 'text-xs font-bold uppercase tracking-wider text-[#5B6270]'
+        : 'text-xs font-bold uppercase tracking-wider text-slate-400';
+      document.getElementById('nextClass').className = isLight
+        ? 'text-base sm:text-lg font-semibold text-[#1C1F24]'
+        : 'text-base sm:text-lg font-semibold text-slate-200';
+      document.getElementById('nextWindow').className = isLight
+        ? 'text-sm font-medium text-[#5B6270]'
+        : 'text-sm font-medium text-slate-400';
+
+      const noteBanner = document.getElementById('roomNoteBanner');
+      noteBanner.className = noteBanner.classList.contains('hidden')
+        ? (isLight
+            ? 'hidden px-6 sm:px-10 py-3 bg-amber-100 border-b border-amber-300 text-amber-950 text-sm sm:text-base font-medium flex items-center gap-2'
+            : 'hidden px-6 sm:px-10 py-3 bg-amber-500/15 border-b border-amber-500/30 text-amber-200 text-sm sm:text-base font-medium flex items-center gap-2')
+        : (isLight
+            ? 'px-6 sm:px-10 py-3 bg-amber-100 border-b border-amber-300 text-amber-950 text-sm sm:text-base font-medium flex items-center gap-2'
+            : 'px-6 sm:px-10 py-3 bg-amber-500/15 border-b border-amber-500/30 text-amber-200 text-sm sm:text-base font-medium flex items-center gap-2');
+    }
+
     function renderDisplay() {
+      applyDisplayTheme();
+      const isLight = (appSettings && appSettings.theme) === 'light';
       const roomId = document.getElementById('roomSelect').value;
       const { day, time } = getActiveDayAndTime();
       const room = roomsMap[roomId];
@@ -840,7 +1209,9 @@
         statusIndicator.className = 'w-2.5 h-2.5 rounded-full bg-rose-400';
         cancelledPill.classList.remove('hidden');
         currentClassEl.textContent = current.title;
-        currentClassEl.className = 'text-2xl sm:text-4xl font-bold text-rose-300 line-through mb-3';
+        currentClassEl.className = isLight
+          ? 'text-2xl sm:text-4xl font-bold text-rose-700 line-through mb-3'
+          : 'text-2xl sm:text-4xl font-bold text-rose-300 line-through mb-3';
         document.getElementById('currentWindow').textContent = `${formatTime12h(current.start)} – ${formatTime12h(current.end)}`;
         document.getElementById('currentLeader').textContent = current.leader || '—';
       } else if (current) {
@@ -848,7 +1219,9 @@
         statusIndicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse';
         cancelledPill.classList.add('hidden');
         currentClassEl.textContent = current.title;
-        currentClassEl.className = 'text-2xl sm:text-4xl font-bold text-white mb-3';
+        currentClassEl.className = isLight
+          ? 'text-2xl sm:text-4xl font-bold text-[#1C1F24] mb-3'
+          : 'text-2xl sm:text-4xl font-bold text-white mb-3';
         document.getElementById('currentWindow').textContent = `${formatTime12h(current.start)} – ${formatTime12h(current.end)}`;
         document.getElementById('currentLeader').textContent = current.leader || '—';
       } else {
@@ -856,7 +1229,9 @@
         statusIndicator.className = 'w-2.5 h-2.5 rounded-full bg-slate-300';
         cancelledPill.classList.add('hidden');
         currentClassEl.textContent = 'No Class Scheduled Right Now';
-        currentClassEl.className = 'text-2xl sm:text-4xl font-bold text-slate-300 mb-3';
+        currentClassEl.className = isLight
+          ? 'text-2xl sm:text-4xl font-bold text-[#5B6270] mb-3'
+          : 'text-2xl sm:text-4xl font-bold text-slate-300 mb-3';
         document.getElementById('currentWindow').textContent = 'Open / Available';
         document.getElementById('currentLeader').textContent = '—';
       }
@@ -915,6 +1290,313 @@
       }, opts.onUndo ? 8000 : 3500);
     }
 
+    let activeAdminSubTab = 'rooms';
+    let ageGroupsWithUsage = [];
+    let curatedPalette = [
+      { name: 'Indigo', hex: '#4338ca' },
+      { name: 'Teal', hex: '#0f766e' },
+      { name: 'Sky Blue', hex: '#0369a1' },
+      { name: 'Emerald', hex: '#047857' },
+      { name: 'Amber', hex: '#b45309' },
+      { name: 'Purple', hex: '#7e22ce' },
+      { name: 'Raspberry', hex: '#be185d' },
+      { name: 'Royal Blue', hex: '#1d4ed8' },
+      { name: 'Crimson', hex: '#b91c1c' },
+      { name: 'Slate', hex: '#475569' }
+    ];
+    let agPreviewLight = false;
+    let activeSwapClassId = null;
+    let pendingDeleteAgeGroupId = null;
+
+    function hexToLuminance(hex) {
+      const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(String(hex || '').trim());
+      if (!m) return 0;
+      const rgb = [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)].map(v => {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+    }
+
+    function calcContrastRatio(hex1, hex2) {
+      const l1 = hexToLuminance(hex1);
+      const l2 = hexToLuminance(hex2);
+      const lighter = Math.max(l1, l2);
+      const darker = Math.min(l1, l2);
+      return Math.round(((lighter + 0.05) / (darker + 0.05)) * 100) / 100;
+    }
+
+    function pickAutoTextColor(bgHex) {
+      return calcContrastRatio(bgHex, '#ffffff') >= calcContrastRatio(bgHex, '#0f172a') ? '#ffffff' : '#0f172a';
+    }
+
+    function switchAdminSubTab(subTab) {
+      activeAdminSubTab = subTab;
+      document.getElementById('adminSubRooms').classList.toggle('hidden', subTab !== 'rooms');
+      document.getElementById('adminSubClasses').classList.toggle('hidden', subTab !== 'classes');
+      document.getElementById('adminSubAgeGroups').classList.toggle('hidden', subTab !== 'agegroups');
+      document.getElementById('adminSubSettings').classList.toggle('hidden', subTab !== 'settings');
+
+      const map = {
+        rooms: 'subTabRooms',
+        classes: 'subTabClasses',
+        agegroups: 'subTabAgeGroups',
+        settings: 'subTabSettings'
+      };
+      for (const [k, btnId] of Object.entries(map)) {
+        const btn = document.getElementById(btnId);
+        if (!btn) continue;
+        btn.className = k === subTab
+          ? 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-indigo-600 text-white transition'
+          : 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition';
+      }
+
+      if (subTab === 'agegroups') fetchAgeGroupsDetailed();
+      if (subTab === 'settings') {
+        renderSettingsControls();
+        fetchAdminUsers();
+        fetchAuditLog();
+      }
+    }
+
+    function renderSettingsControls() {
+      const isLight = (appSettings && appSettings.theme) === 'light';
+      const darkBtn = document.getElementById('themeDarkBtn');
+      const lightBtn = document.getElementById('themeLightBtn');
+      if (darkBtn && lightBtn) {
+        darkBtn.className = !isLight
+          ? 'px-4 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition'
+          : 'px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition';
+        lightBtn.className = isLight
+          ? 'px-4 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition'
+          : 'px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition';
+      }
+      const tzSel = document.getElementById('churchTzSelect');
+      if (tzSel && appSettings && appSettings.timezone) {
+        if ([...tzSel.options].some(o => o.value === appSettings.timezone)) {
+          tzSel.value = appSettings.timezone;
+        }
+      }
+    }
+
+    function renderAgeGroupPreview() {
+      const label = document.getElementById('agLabelInput').value.trim() || 'Age Group';
+      const bgRaw = document.getElementById('agColorHex').value.trim();
+      const bg = /^#[0-9a-f]{6}$/i.test(bgRaw) ? bgRaw : '#4338ca';
+      const autoText = document.getElementById('agAutoTextCheck').checked;
+      document.getElementById('agCustomTextWrap').classList.toggle('hidden', autoText);
+      const customText = document.getElementById('agTextHex').value.trim();
+      const fg = autoText ? pickAutoTextColor(bg) : (/^#[0-9a-f]{6}$/i.test(customText) ? customText : '#ffffff');
+
+      const ratio = calcContrastRatio(bg, fg);
+      const badge = document.getElementById('agContrastBadge');
+      if (ratio >= 7.0) {
+        badge.textContent = `Contrast ${ratio}:1 · WCAG AAA`;
+        badge.className = 'inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+      } else if (ratio >= 4.5) {
+        badge.textContent = `Contrast ${ratio}:1 · WCAG AA`;
+        badge.className = 'inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+      } else {
+        badge.textContent = `Contrast ${ratio}:1 · Low Contrast (< 4.5:1)`;
+        badge.className = 'inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-amber-500/15 text-amber-300 border-amber-500/30';
+      }
+
+      const miniBanner = document.getElementById('agMiniBanner');
+      miniBanner.style.backgroundColor = bg;
+      miniBanner.style.color = fg;
+      document.getElementById('agMiniBadge').textContent = label;
+
+      const miniBody = document.getElementById('agMiniBody');
+      const miniFrame = document.getElementById('agMiniFrame');
+      if (agPreviewLight) {
+        miniFrame.className = 'rounded-2xl overflow-hidden border border-stone-300 shadow-lg bg-[#FAF8F4]';
+        miniBody.className = 'p-4 space-y-2 bg-[#FAF8F4] text-[#1C1F24]';
+      } else {
+        miniFrame.className = 'rounded-2xl overflow-hidden border border-slate-700 shadow-lg bg-slate-900';
+        miniBody.className = 'p-4 space-y-2 bg-slate-900 text-white';
+      }
+    }
+
+    function renderPaletteSwatches() {
+      const container = document.getElementById('agPaletteSwatches');
+      if (!container) return;
+      container.replaceChildren();
+      curatedPalette.forEach(p => {
+        const btn = el('button', {
+          type: 'button',
+          title: `${p.name} (${p.hex})`,
+          'data-palette-hex': p.hex,
+          className: 'w-7 h-7 rounded-full border-2 border-white/30 hover:scale-110 transition cursor-pointer',
+          style: { backgroundColor: p.hex }
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function resetAgeGroupForm() {
+      document.getElementById('agEditId').value = '';
+      document.getElementById('agFormHeading').textContent = 'Create Age Group';
+      document.getElementById('agSubmitBtn').textContent = 'Create Age Group';
+      document.getElementById('agResetFormBtn').classList.add('hidden');
+      document.getElementById('agLabelInput').value = '';
+      document.getElementById('agColorPicker').value = '#4338ca';
+      document.getElementById('agColorHex').value = '#4338ca';
+      document.getElementById('agAutoTextCheck').checked = true;
+      document.getElementById('agTextPicker').value = '#ffffff';
+      document.getElementById('agTextHex').value = '#ffffff';
+      document.getElementById('agIsDefaultCheck').checked = false;
+      document.getElementById('agAliasesInput').value = '';
+      renderAgeGroupPreview();
+    }
+
+    function populateAgeGroupFormForEdit(ag) {
+      document.getElementById('agEditId').value = ag.id;
+      document.getElementById('agFormHeading').textContent = `Edit Age Group — ${ag.label}`;
+      document.getElementById('agSubmitBtn').textContent = 'Save Age Group';
+      document.getElementById('agResetFormBtn').classList.remove('hidden');
+      document.getElementById('agLabelInput').value = ag.label;
+      document.getElementById('agColorPicker').value = ag.bannerBg;
+      document.getElementById('agColorHex').value = ag.bannerBg;
+      const autoText = ag.bannerText.toLowerCase() === pickAutoTextColor(ag.bannerBg).toLowerCase();
+      document.getElementById('agAutoTextCheck').checked = autoText;
+      document.getElementById('agTextPicker').value = ag.bannerText;
+      document.getElementById('agTextHex').value = ag.bannerText;
+      document.getElementById('agIsDefaultCheck').checked = Boolean(ag.isDefault);
+      document.getElementById('agAliasesInput').value = (ag.aliases || []).join(', ');
+      renderAgeGroupPreview();
+    }
+
+    async function fetchAgeGroupsDetailed() {
+      try {
+        const res = await fetch('/api/age-groups');
+        if (!res.ok) return;
+        const data = await res.json();
+        ageGroupsWithUsage = data.ageGroups || [];
+        if (data.palette && data.palette.length) curatedPalette = data.palette;
+        renderPaletteSwatches();
+        renderAgeGroupsTable();
+        renderAgeGroupPreview();
+      } catch (err) {}
+    }
+
+    function renderAgeGroupsTable() {
+      const tbody = document.getElementById('adminAgeGroupsBody');
+      if (!tbody) return;
+      tbody.replaceChildren();
+      const list = ageGroupsWithUsage.length ? ageGroupsWithUsage : ageGroups;
+      list.forEach((ag, idx) => {
+        const ratio = ag.contrastRatio || calcContrastRatio(ag.bannerBg, ag.bannerText);
+        const upBtn = el('button', {
+          type: 'button',
+          'data-ag-move': ag.id,
+          'data-ag-dir': '-1',
+          className: 'px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-xs border border-slate-700',
+          text: '↑'
+        });
+        if (idx === 0) upBtn.disabled = true;
+
+        const downBtn = el('button', {
+          type: 'button',
+          'data-ag-move': ag.id,
+          'data-ag-dir': '1',
+          className: 'px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-xs border border-slate-700',
+          text: '↓'
+        });
+        if (idx === list.length - 1) downBtn.disabled = true;
+
+        const labelNodes = [
+          el('span', { className: 'w-4 h-4 rounded-full border border-white/25 inline-block', style: { backgroundColor: ag.bannerBg } }),
+          el('span', { className: 'font-semibold text-white', text: ag.label }),
+          el('span', { className: 'font-mono text-xs text-slate-400', text: ag.bannerBg })
+        ];
+        if (ag.isDefault) {
+          labelNodes.push(el('span', { className: 'px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-indigo-500/20 text-indigo-300', text: 'Default' }));
+        }
+
+        const tr = el('tr', { className: 'hover:bg-slate-800/40' }, [
+          el('td', { className: 'px-4 py-3 whitespace-nowrap' }, [
+            el('div', { className: 'flex items-center gap-1' }, [upBtn, downBtn])
+          ]),
+          el('td', { className: 'px-4 py-3 whitespace-nowrap' }, [
+            el('div', { className: 'flex items-center gap-2' }, labelNodes)
+          ]),
+          el('td', { className: 'px-4 py-3 whitespace-nowrap text-xs' }, [
+            el('span', {
+              className: `px-2 py-0.5 rounded font-semibold ${ratio >= 4.5 ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`,
+              text: `${ratio}:1`
+            })
+          ]),
+          el('td', { className: 'px-4 py-3 text-xs text-slate-400', text: (ag.aliases || []).join(', ') || '—' }),
+          el('td', { className: 'px-4 py-3 whitespace-nowrap text-xs text-slate-300', text: `${ag.classCount ?? 0} classes · ${ag.roomCount ?? 0} rooms` }),
+          el('td', { className: 'px-4 py-3 text-right whitespace-nowrap' }, [
+            el('div', { className: 'inline-flex items-center gap-1.5' }, [
+              el('button', {
+                type: 'button',
+                'data-ag-edit': ag.id,
+                className: 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 transition',
+                text: 'Edit'
+              }),
+              el('button', {
+                type: 'button',
+                'data-ag-delete': ag.id,
+                className: 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-600/15 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 transition',
+                text: 'Delete'
+              })
+            ])
+          ])
+        ]);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openSwapModal(classId) {
+      const item = scheduleList.find(c => c.id === classId);
+      if (!item) return;
+      activeSwapClassId = classId;
+      document.getElementById('swapError').classList.add('hidden');
+      document.getElementById('swapClassSummary').textContent =
+        `${item.title} · ${item.day} ${formatTime12h(item.start)}–${formatTime12h(item.end)} (Currently: ${item.room ? `Room ${item.room}` : 'Unassigned'})`;
+
+      const roomSel = document.getElementById('swapTargetRoomSelect');
+      roomSel.replaceChildren(el('option', { value: '', text: 'Unassigned (No Room)' }));
+      roomsList.forEach(r => {
+        if (r.id === item.room) return;
+        const busy = scheduleList.find(
+          c => c.id !== item.id && !c.cancelled && c.room === r.id && c.day === item.day && c.start < item.end && c.end > item.start
+        );
+        const status = busy ? `Busy: ${busy.title}` : 'Free';
+        roomSel.appendChild(el('option', { value: r.id, text: `${r.name} (${status})` }));
+      });
+
+      const exSel = document.getElementById('swapExchangeClassSelect');
+      exSel.replaceChildren();
+      scheduleList.filter(c => c.id !== item.id && c.room !== item.room).forEach(c => {
+        exSel.appendChild(el('option', {
+          value: String(c.id),
+          text: `${c.room ? `Room ${c.room}` : 'Unassigned'} — ${c.title} (${c.day} ${formatTime12h(c.start)})`
+        }));
+      });
+
+      document.querySelector('input[name="swapAction"][value="move"]').checked = true;
+      document.getElementById('swapTargetRoomWrap').classList.remove('hidden');
+      document.getElementById('swapExchangeWrap').classList.add('hidden');
+      document.getElementById('swapModal').classList.remove('hidden');
+    }
+
+    function openDeleteAgeModal(groupId, classCount, roomCount) {
+      const ag = ageGroupsMap[groupId];
+      if (!ag) return;
+      pendingDeleteAgeGroupId = groupId;
+      document.getElementById('deleteAgeSummary').textContent =
+        `"${ag.label}" is currently used by ${classCount} class(es) and ${roomCount} room(s). Select another age group to reassign them atomically before deleting.`;
+      const sel = document.getElementById('deleteAgeReassignSelect');
+      sel.replaceChildren();
+      ageGroups.filter(g => g.id !== groupId).forEach(g => {
+        sel.appendChild(el('option', { value: g.id, text: g.label }));
+      });
+      document.getElementById('deleteAgeModal').classList.remove('hidden');
+    }
+
     function renderAdminPanel() {
       const query = (document.getElementById('adminSearch').value || '').trim().toLowerCase();
       const grid = document.getElementById('adminRoomsGrid');
@@ -924,6 +1606,14 @@
         const id = room.id;
         if (query && !id.toLowerCase().includes(query) && !room.name.toLowerCase().includes(query)) return;
         const displayTheme = getTheme(room.overrideAgeGroupId || room.defaultAgeGroupId);
+        const classCount = scheduleList.filter(c => c.room === id).length;
+
+        const nameInput = el('input', {
+          type: 'text',
+          'data-name-room': id,
+          value: room.name,
+          className: 'flex-1 min-w-[140px] bg-slate-800/70 text-white font-bold text-sm rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500'
+        });
 
         const ageSelect = el('select', {
           'data-age-room': id,
@@ -947,22 +1637,29 @@
 
         const card = el('div', { className: 'rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4' }, [
           el('div', { className: 'flex flex-wrap items-center justify-between gap-2' }, [
-            el('div', { className: 'flex items-center gap-2.5' }, [
-              el('span', { className: 'w-3 h-3 rounded-full', style: { backgroundColor: displayTheme.bannerBg } }),
-              el('h4', { className: 'font-bold text-white', text: room.name })
+            el('div', { className: 'flex items-center gap-2 flex-1 min-w-0' }, [
+              el('span', { className: 'w-3 h-3 rounded-full shrink-0', style: { backgroundColor: displayTheme.bannerBg } }),
+              nameInput,
+              el('span', { className: 'text-xs text-slate-400 shrink-0', text: `${classCount} cls` })
             ]),
-            el('div', { className: 'flex items-center gap-2' }, [
+            el('div', { className: 'flex items-center gap-1.5' }, [
               el('button', {
                 type: 'button',
                 'data-copy-link': id,
-                className: 'text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition',
-                text: 'Copy iPad Link'
+                className: 'text-xs font-semibold px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition',
+                text: 'Copy Link'
               }),
               el('button', {
                 type: 'button',
                 'data-preview-room': id,
-                className: 'text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 transition',
-                text: 'Preview iPad'
+                className: 'text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 transition',
+                text: 'Preview'
+              }),
+              el('button', {
+                type: 'button',
+                'data-delete-room': id,
+                className: 'text-xs font-semibold px-2 py-1.5 rounded-lg bg-rose-600/15 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 transition',
+                text: 'Delete'
               })
             ])
           ]),
@@ -981,15 +1678,26 @@
       });
 
       const roomFilter = document.getElementById('adminRoomFilter').value;
+      const ageFilterEl = document.getElementById('adminAgeFilter');
+      const ageFilter = ageFilterEl ? ageFilterEl.value : 'ALL';
       const tbody = document.getElementById('adminClassesBody');
       tbody.replaceChildren();
       scheduleList
         .filter(item => {
-          if (roomFilter === 'ALL') return true;
-          if (roomFilter === 'UNASSIGNED') return !item.room;
-          return item.room === roomFilter;
+          if (roomFilter === 'UNASSIGNED' && item.room) return false;
+          if (roomFilter !== 'ALL' && roomFilter !== 'UNASSIGNED' && item.room !== roomFilter) return false;
+          if (ageFilter !== 'ALL' && item.ageGroupId !== ageFilter) return false;
+          return true;
         })
         .forEach(item => {
+          const roomSelectInline = el('select', {
+            'data-edit-room': String(item.id),
+            className: 'bg-slate-800/80 text-white text-xs rounded-lg px-2 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500'
+          }, [
+            el('option', { value: '', text: 'Unassigned', selected: !item.room }),
+            ...roomsList.map(r => el('option', { value: r.id, text: r.id, selected: item.room === r.id }))
+          ]);
+
           const classAgeSelect = el('select', {
             'data-edit-age': String(item.id),
             className: 'bg-slate-800/80 text-slate-100 text-xs rounded-lg px-2 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500'
@@ -1003,36 +1711,54 @@
             type: 'text',
             'data-edit-title': String(item.id),
             value: item.title,
-            className: `w-full min-w-[160px] bg-slate-800/80 text-sm rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${item.cancelled ? 'line-through text-rose-300' : 'text-white'}`
+            className: `w-full min-w-[150px] bg-slate-800/80 text-sm rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${item.cancelled ? 'line-through text-rose-300' : 'text-white'}`
           });
 
           const leaderInput = el('input', {
             type: 'text',
             'data-edit-leader': String(item.id),
             value: item.leader || '',
-            className: 'w-full min-w-[130px] bg-slate-800/80 text-slate-200 text-sm rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500'
+            className: 'w-full min-w-[120px] bg-slate-800/80 text-slate-200 text-sm rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500'
+          });
+
+          const swapBtn = el('button', {
+            type: 'button',
+            'data-open-swap': String(item.id),
+            className: 'px-2 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 transition',
+            text: 'Swap'
           });
 
           const cancelBtn = el('button', {
             type: 'button',
             'data-toggle-cancel': String(item.id),
-            className: `px-3 py-1 rounded-lg text-xs font-semibold transition ${item.cancelled ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30' : 'bg-rose-600/20 text-rose-300 border border-rose-500/40 hover:bg-rose-600/30'}`,
+            className: `px-2.5 py-1 rounded-lg text-xs font-semibold transition ${item.cancelled ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30' : 'bg-rose-600/20 text-rose-300 border border-rose-500/40 hover:bg-rose-600/30'}`,
             text: item.cancelled ? 'Restore' : 'Cancel'
           });
 
+          const delBtn = el('button', {
+            type: 'button',
+            'data-delete-class': String(item.id),
+            className: 'px-2 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-rose-600/30 text-slate-400 hover:text-rose-200 border border-slate-700 transition',
+            text: 'Del'
+          });
+
           const tr = el('tr', { className: item.cancelled ? 'bg-rose-950/20' : 'hover:bg-slate-800/40' }, [
-            el('td', { className: 'px-4 py-3 font-medium text-white whitespace-nowrap', text: item.room ? `Room ${item.room}` : 'Unassigned' }),
-            el('td', { className: 'px-4 py-3 whitespace-nowrap' }, [classAgeSelect]),
-            el('td', { className: 'px-4 py-3 whitespace-nowrap text-xs sm:text-sm' }, [
+            el('td', { className: 'px-3 py-3 whitespace-nowrap' }, [roomSelectInline]),
+            el('td', { className: 'px-3 py-3 whitespace-nowrap' }, [classAgeSelect]),
+            el('td', { className: 'px-3 py-3 whitespace-nowrap text-xs' }, [
               el('div', { className: 'font-medium text-slate-200', text: item.day }),
               el('div', { className: 'text-slate-400', text: `${formatTime12h(item.start)} – ${formatTime12h(item.end)}` })
             ]),
-            el('td', { className: 'px-4 py-3' }, [titleInput]),
-            el('td', { className: 'px-4 py-3' }, [leaderInput]),
-            el('td', { className: 'px-4 py-3 text-right whitespace-nowrap' }, [cancelBtn])
+            el('td', { className: 'px-3 py-3' }, [titleInput]),
+            el('td', { className: 'px-3 py-3' }, [leaderInput]),
+            el('td', { className: 'px-3 py-3 text-right whitespace-nowrap' }, [
+              el('div', { className: 'inline-flex items-center gap-1' }, [swapBtn, cancelBtn, delBtn])
+            ])
           ]);
           tbody.appendChild(tr);
         });
+
+      renderSettingsControls();
     }
 
     async function fetchAdminUsers() {
@@ -1419,8 +2145,7 @@
       }
       if (tab === 'admin') {
         renderAdminPanel();
-        fetchAdminUsers();
-        fetchAuditLog();
+        switchAdminSubTab(activeAdminSubTab);
       }
     }
 
@@ -1580,6 +2305,287 @@
     document.getElementById('exportExcelBtn').addEventListener('click', exportCurrentExcel);
     document.getElementById('adminSearch').addEventListener('input', renderAdminPanel);
     document.getElementById('adminRoomFilter').addEventListener('change', renderAdminPanel);
+    document.getElementById('adminAgeFilter').addEventListener('change', renderAdminPanel);
+
+    document.querySelectorAll('[data-admin-subtab]').forEach(btn => {
+      btn.addEventListener('click', () => switchAdminSubTab(btn.getAttribute('data-admin-subtab')));
+    });
+
+    // Settings: Theme & Timezone
+    async function saveAppSettings(changes, msg) {
+      const res = await apiFetch('/api/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(changes)
+      });
+      if (res.status === 401) { handleAuthExpired(); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showAdminToast(data.error || 'Could not save settings.', { isError: true });
+        return;
+      }
+      appSettings = data.settings || appSettings;
+      lastStateEtag = null;
+      renderSettingsControls();
+      renderDisplay();
+      fetchAuditLog();
+      showAdminToast(msg);
+    }
+
+    document.getElementById('themeDarkBtn').addEventListener('click', () => saveAppSettings({ theme: 'dark' }, 'Door Display theme set to Dark (default).'));
+    document.getElementById('themeLightBtn').addEventListener('click', () => saveAppSettings({ theme: 'light' }, 'Door Display theme set to Light (warm off-white).'));
+    document.getElementById('churchTzSelect').addEventListener('change', (e) => saveAppSettings({ timezone: e.target.value }, `Church timezone set to ${e.target.value}.`));
+
+    // Rooms CRUD: Create & Clear All Notices
+    document.getElementById('createRoomForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('newRoomId').value.trim();
+      const name = document.getElementById('newRoomName').value.trim();
+      const defaultAgeGroupId = document.getElementById('newRoomDefaultAge').value || null;
+      const note = document.getElementById('newRoomNote').value.trim();
+      const res = await apiFetch('/api/rooms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, name, defaultAgeGroupId, note })
+      });
+      if (res.status === 401) { handleAuthExpired(); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showAdminToast(data.error || 'Could not create room.', { isError: true });
+        return;
+      }
+      e.target.reset();
+      lastStateEtag = null;
+      await fetchServerState(true);
+      showAdminToast(`Created room "${data.room.name}".`);
+    });
+
+    document.getElementById('clearNoticesBtn').addEventListener('click', async () => {
+      if (!window.confirm('Clear all live Door Notices across every room?')) return;
+      const res = await apiFetch('/api/rooms/clear-notices', { method: 'POST' });
+      if (res.status === 401) { handleAuthExpired(); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { showAdminToast(data.error || 'Could not clear notices.', { isError: true }); return; }
+      lastStateEtag = null;
+      await fetchServerState(true);
+      showAdminToast(`Cleared ${data.clearedCount} Door Notice(s).`);
+    });
+
+    // Classes CRUD: Create
+    document.getElementById('createClassForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        title: document.getElementById('newClassTitle').value.trim(),
+        ageGroupId: document.getElementById('newClassAgeGroup').value,
+        roomId: document.getElementById('newClassRoom').value || null,
+        leader: document.getElementById('newClassLeader').value.trim(),
+        day: document.getElementById('newClassDay').value,
+        start: document.getElementById('newClassStart').value,
+        end: document.getElementById('newClassEnd').value
+      };
+      const res = await apiFetch('/api/classes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.status === 401) { handleAuthExpired(); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showAdminToast(data.error || 'Could not add class.', { isError: true });
+        return;
+      }
+      document.getElementById('newClassTitle').value = '';
+      document.getElementById('newClassLeader').value = '';
+      lastStateEtag = null;
+      await fetchServerState(true);
+      showAdminToast(`Added class "${data.class.title}".`);
+    });
+
+    // Move / Swap Modal
+    document.getElementById('closeSwapModalBtn').addEventListener('click', () => document.getElementById('swapModal').classList.add('hidden'));
+    document.querySelectorAll('input[name="swapAction"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        const isExchange = document.querySelector('input[name="swapAction"]:checked').value === 'exchange';
+        document.getElementById('swapTargetRoomWrap').classList.toggle('hidden', isExchange);
+        document.getElementById('swapExchangeWrap').classList.toggle('hidden', !isExchange);
+      });
+    });
+
+    document.getElementById('swapForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!activeSwapClassId) return;
+      const errEl = document.getElementById('swapError');
+      errEl.classList.add('hidden');
+      const action = document.querySelector('input[name="swapAction"]:checked').value;
+      const body = action === 'exchange'
+        ? { classId: activeSwapClassId, exchangeWithClassId: Number(document.getElementById('swapExchangeClassSelect').value) }
+        : { classId: activeSwapClassId, targetRoomId: document.getElementById('swapTargetRoomSelect').value || null };
+      const res = await apiFetch('/api/classes/swap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (res.status === 401) { handleAuthExpired(); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        errEl.textContent = data.error || 'Could not apply room change.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      document.getElementById('swapModal').classList.add('hidden');
+      lastStateEtag = null;
+      await fetchServerState(true);
+      showAdminToast(data.mode === 'swap' ? 'Swapped rooms for both classes.' : 'Moved class to new room.');
+    });
+
+    // Age Groups Manager Events
+    document.getElementById('agLabelInput').addEventListener('input', renderAgeGroupPreview);
+    document.getElementById('agColorPicker').addEventListener('input', (e) => {
+      document.getElementById('agColorHex').value = e.target.value;
+      renderAgeGroupPreview();
+    });
+    document.getElementById('agColorHex').addEventListener('input', (e) => {
+      if (/^#[0-9a-f]{6}$/i.test(e.target.value.trim())) {
+        document.getElementById('agColorPicker').value = e.target.value.trim();
+      }
+      renderAgeGroupPreview();
+    });
+    document.getElementById('agAutoTextCheck').addEventListener('change', renderAgeGroupPreview);
+    document.getElementById('agTextPicker').addEventListener('input', (e) => {
+      document.getElementById('agTextHex').value = e.target.value;
+      renderAgeGroupPreview();
+    });
+    document.getElementById('agTextHex').addEventListener('input', (e) => {
+      if (/^#[0-9a-f]{6}$/i.test(e.target.value.trim())) {
+        document.getElementById('agTextPicker').value = e.target.value.trim();
+      }
+      renderAgeGroupPreview();
+    });
+    document.getElementById('agPreviewThemeBtn').addEventListener('click', (e) => {
+      agPreviewLight = !agPreviewLight;
+      e.target.textContent = agPreviewLight ? 'Preview: Light' : 'Preview: Dark';
+      renderAgeGroupPreview();
+    });
+    document.getElementById('agPaletteSwatches').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-palette-hex]');
+      if (!btn) return;
+      const hex = btn.getAttribute('data-palette-hex');
+      document.getElementById('agColorPicker').value = hex;
+      document.getElementById('agColorHex').value = hex;
+      renderAgeGroupPreview();
+    });
+    document.getElementById('agResetFormBtn').addEventListener('click', resetAgeGroupForm);
+
+    document.getElementById('ageGroupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const editId = document.getElementById('agEditId').value.trim();
+      const autoText = document.getElementById('agAutoTextCheck').checked;
+      const payload = {
+        label: document.getElementById('agLabelInput').value.trim(),
+        bannerBg: document.getElementById('agColorHex').value.trim(),
+        autoText,
+        aliases: document.getElementById('agAliasesInput').value,
+        isDefault: document.getElementById('agIsDefaultCheck').checked
+      };
+      if (!autoText) payload.bannerText = document.getElementById('agTextHex').value.trim();
+
+      const url = editId ? `/api/age-groups/${encodeURIComponent(editId)}` : '/api/age-groups';
+      const method = editId ? 'PATCH' : 'POST';
+      const res = await apiFetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.status === 401) { handleAuthExpired(); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showAdminToast(data.error || 'Could not save age group.', { isError: true });
+        return;
+      }
+      resetAgeGroupForm();
+      lastStateEtag = null;
+      await fetchServerState(true);
+      await fetchAgeGroupsDetailed();
+      showAdminToast(`${editId ? 'Updated' : 'Created'} age group "${data.ageGroup.label}".`);
+    });
+
+    document.getElementById('adminAgeGroupsBody').addEventListener('click', async (e) => {
+      const editBtn = e.target.closest('[data-ag-edit]');
+      if (editBtn) {
+        const gid = editBtn.getAttribute('data-ag-edit');
+        const ag = ageGroupsMap[gid];
+        if (ag) populateAgeGroupFormForEdit(ag);
+        return;
+      }
+
+      const moveBtn = e.target.closest('[data-ag-move]');
+      if (moveBtn && !moveBtn.disabled) {
+        const gid = moveBtn.getAttribute('data-ag-move');
+        const dir = Number(moveBtn.getAttribute('data-ag-dir'));
+        const ids = ageGroups.map(g => g.id);
+        const idx = ids.indexOf(gid);
+        const target = idx + dir;
+        if (idx < 0 || target < 0 || target >= ids.length) return;
+        [ids[idx], ids[target]] = [ids[target], ids[idx]];
+        const res = await apiFetch('/api/age-groups/reorder', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order: ids })
+        });
+        if (res.ok) {
+          lastStateEtag = null;
+          await fetchServerState(true);
+          await fetchAgeGroupsDetailed();
+          showAdminToast('Updated age group order.');
+        }
+        return;
+      }
+
+      const delBtn = e.target.closest('[data-ag-delete]');
+      if (delBtn) {
+        const gid = delBtn.getAttribute('data-ag-delete');
+        const ag = ageGroupsMap[gid];
+        if (!ag) return;
+        const res = await apiFetch(`/api/age-groups/${encodeURIComponent(gid)}`, { method: 'DELETE' });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 409 && data.code === 'REASSIGN_REQUIRED') {
+          openDeleteAgeModal(gid, data.classCount, data.roomCount);
+          return;
+        }
+        if (!res.ok) {
+          showAdminToast(data.error || 'Could not delete age group.', { isError: true });
+          return;
+        }
+        lastStateEtag = null;
+        await fetchServerState(true);
+        await fetchAgeGroupsDetailed();
+        showAdminToast(`Deleted age group "${ag.label}".`);
+      }
+    });
+
+    document.getElementById('closeDeleteAgeModalBtn').addEventListener('click', () => document.getElementById('deleteAgeModal').classList.add('hidden'));
+    document.getElementById('cancelDeleteAgeBtn').addEventListener('click', () => document.getElementById('deleteAgeModal').classList.add('hidden'));
+    document.getElementById('deleteAgeForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!pendingDeleteAgeGroupId) return;
+      const reassignTo = document.getElementById('deleteAgeReassignSelect').value;
+      const res = await apiFetch(`/api/age-groups/${encodeURIComponent(pendingDeleteAgeGroupId)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reassignTo })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showAdminToast(data.error || 'Could not reassign and delete age group.', { isError: true });
+        return;
+      }
+      document.getElementById('deleteAgeModal').classList.add('hidden');
+      pendingDeleteAgeGroupId = null;
+      lastStateEtag = null;
+      await fetchServerState(true);
+      await fetchAgeGroupsDetailed();
+      showAdminToast(`Reassigned ${data.reassignedClasses} class(es) and deleted age group.`);
+    });
 
     document.getElementById('adminRoomsGrid').addEventListener('change', async (e) => {
       const roomId = e.target.getAttribute('data-age-room');
@@ -1601,6 +2607,17 @@
         }
         return;
       }
+      const nameRoomId = e.target.getAttribute('data-name-room');
+      if (nameRoomId && roomsMap[nameRoomId]) {
+        const val = e.target.value.trim();
+        if (val) {
+          flushDebounced(`room-name:${nameRoomId}`, async () => {
+            const updated = await patchRoom(nameRoomId, { name: val });
+            if (updated) { populateSelectors(); renderScheduleTable(); renderDisplay(); }
+          });
+        }
+        return;
+      }
       const noteRoomId = e.target.getAttribute('data-note-room');
       if (noteRoomId && roomsMap[noteRoomId]) {
         const val = e.target.value;
@@ -1612,6 +2629,18 @@
     });
 
     document.getElementById('adminRoomsGrid').addEventListener('input', (e) => {
+      const nameRoomId = e.target.getAttribute('data-name-room');
+      if (nameRoomId && roomsMap[nameRoomId]) {
+        const val = e.target.value;
+        roomsMap[nameRoomId].name = val;
+        renderDisplay();
+        scheduleDebounced(`room-name:${nameRoomId}`, async () => {
+          if (!val.trim()) return;
+          const updated = await patchRoom(nameRoomId, { name: val.trim() });
+          if (updated) { populateSelectors(); renderScheduleTable(); renderDisplay(); }
+        });
+        return;
+      }
       const roomId = e.target.getAttribute('data-note-room');
       if (roomId && roomsMap[roomId]) {
         const val = e.target.value;
@@ -1624,7 +2653,7 @@
       }
     });
 
-    document.getElementById('adminRoomsGrid').addEventListener('click', (e) => {
+    document.getElementById('adminRoomsGrid').addEventListener('click', async (e) => {
       const previewBtn = e.target.closest('[data-preview-room]');
       if (previewBtn) {
         document.getElementById('roomSelect').value = previewBtn.getAttribute('data-preview-room');
@@ -1638,10 +2667,44 @@
         const base = window.location.href.split('?')[0];
         copyTextToClipboard(`${base}?room=${encodeURIComponent(roomId)}&kiosk=1`);
         showAdminToast(`Copied iPad kiosk link for Room ${roomId}: ?room=${encodeURIComponent(roomId)}&kiosk=1`);
+        return;
+      }
+      const delBtn = e.target.closest('[data-delete-room]');
+      if (delBtn) {
+        const roomId = delBtn.getAttribute('data-delete-room');
+        const room = roomsMap[roomId];
+        if (!room) return;
+        if (!window.confirm(`Delete "${room.name}"? Any classes assigned to this room will be preserved as Unassigned.`)) return;
+        const res = await apiFetch(`/api/rooms/${encodeURIComponent(roomId)}`, { method: 'DELETE' });
+        if (res.status === 401) { handleAuthExpired(); return; }
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) { showAdminToast(data.error || 'Could not delete room.', { isError: true }); return; }
+        lastStateEtag = null;
+        await fetchServerState(true);
+        showAdminToast(`Deleted room "${room.name}" (${data.unassignedClassCount} class(es) moved to Unassigned).`);
       }
     });
 
     document.getElementById('adminClassesBody').addEventListener('click', async (e) => {
+      const swapBtn = e.target.closest('[data-open-swap]');
+      if (swapBtn) {
+        openSwapModal(Number(swapBtn.getAttribute('data-open-swap')));
+        return;
+      }
+      const delBtn = e.target.closest('[data-delete-class]');
+      if (delBtn) {
+        const classId = Number(delBtn.getAttribute('data-delete-class'));
+        const item = scheduleList.find(c => c.id === classId);
+        if (!item) return;
+        if (!window.confirm(`Delete class "${item.title}"?`)) return;
+        const res = await apiFetch(`/api/classes/${classId}`, { method: 'DELETE' });
+        if (res.status === 401) { handleAuthExpired(); return; }
+        if (!res.ok) { showAdminToast('Could not delete class.', { isError: true }); return; }
+        lastStateEtag = null;
+        await fetchServerState(true);
+        showAdminToast(`Deleted class "${item.title}".`);
+        return;
+      }
       const btn = e.target.closest('[data-toggle-cancel]');
       if (!btn) return;
       const classId = Number(btn.getAttribute('data-toggle-cancel'));
@@ -1664,6 +2727,27 @@
     });
 
     document.getElementById('adminClassesBody').addEventListener('change', async (e) => {
+      const roomEditId = e.target.getAttribute('data-edit-room');
+      if (roomEditId) {
+        const classId = Number(roomEditId);
+        const item = scheduleList.find(c => c.id === classId);
+        if (!item) return;
+        const prevRoom = item.room;
+        const nextRoom = e.target.value || null;
+        const updated = await patchClass(classId, { roomId: nextRoom });
+        if (updated) {
+          renderAdminPanel();
+          renderScheduleTable();
+          renderDisplay();
+          showAdminToast(`Moved "${updated.title}" to ${nextRoom ? `Room ${nextRoom}` : 'Unassigned'}.`, {
+            onUndo: async () => {
+              const reverted = await patchClass(classId, { roomId: prevRoom });
+              if (reverted) { renderAdminPanel(); renderScheduleTable(); renderDisplay(); }
+            }
+          });
+        }
+        return;
+      }
       const ageId = e.target.getAttribute('data-edit-age');
       if (ageId) {
         const classId = Number(ageId);

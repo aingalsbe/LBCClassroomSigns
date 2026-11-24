@@ -326,3 +326,143 @@ def delete_class(class_id: int):
         )
 
     return jsonify({"ok": True, "deletedClassId": class_id, "stateVersion": state_version})
+
+
+@classes_bp.route("/api/classes/swap", methods=["POST"])
+@require_admin
+def swap_or_move_class():
+    body = request.get_json(silent=True) or {}
+    if not isinstance(body, dict):
+        return jsonify({"error": "Invalid JSON body"}), 400
+
+    class_id = body.get("classId")
+    target_room_id = body.get("targetRoomId")
+    exchange_id = body.get("exchangeWithClassId")
+
+    if not class_id:
+        return jsonify({"error": "classId is required"}), 400
+    target_room_id = str(target_room_id).strip() if (target_room_id is not None and str(target_room_id).strip() != "") else None
+
+    db = get_db()
+    now = utc_now_iso()
+    try:
+        with write_transaction(db):
+            cls_a = db.execute("SELECT * FROM classes WHERE id = ?", (int(class_id),)).fetchone()
+            if not cls_a:
+                return jsonify({"error": f"Class #{class_id} not found"}), 404
+
+            if exchange_id is not None:
+                cls_b = db.execute("SELECT * FROM classes WHERE id = ?", (int(exchange_id),)).fetchone()
+                if not cls_b:
+                    return jsonify({"error": f"Exchange class #{exchange_id} not found"}), 404
+                if cls_a["id"] == cls_b["id"]:
+                    return jsonify({"error": "Cannot swap a class with itself"}), 400
+
+                room_a, room_b = cls_a["room_id"], cls_b["room_id"]
+                if room_a == room_b:
+                    return jsonify({"error": "Both classes are already in the same room"}), 400
+
+                # Temporarily unassign both inside the transaction to validate clean overlaps against other classes
+                db.execute("UPDATE classes SET room_id = NULL WHERE id IN (?, ?)", (cls_a["id"], cls_b["id"]))
+
+                if not cls_a["cancelled"]:
+                    c1 = find_overlapping_class(
+                        db, room_b, cls_a["day"], cls_a["start_time"], cls_a["end_time"], date=cls_a["date"]
+                    )
+                    if c1:
+                        raise ValueError(
+                            f"Cannot swap: '{cls_a['title']}' overlaps '{c1['title']}' ({c1['start_time']}–{c1['end_time']}) in Room {room_b}."
+                        )
+                if not cls_b["cancelled"]:
+                    c2 = find_overlapping_class(
+                        db, room_a, cls_b["day"], cls_b["start_time"], cls_b["end_time"], date=cls_b["date"]
+                    )
+                    if c2:
+                        raise ValueError(
+                            f"Cannot swap: '{cls_b['title']}' overlaps '{c2['title']}' ({c2['start_time']}–{c2['end_time']}) in Room {room_a}."
+                        )
+
+                db.execute(
+                    "UPDATE classes SET room_id = ?, source = 'admin', version = version + 1, updated_at = ? WHERE id = ?",
+                    (room_b, now, cls_a["id"]),
+                )
+                db.execute(
+                    "UPDATE classes SET room_id = ?, source = 'admin', version = version + 1, updated_at = ? WHERE id = ?",
+                    (room_a, now, cls_b["id"]),
+                )
+                state_version = bump_state_version(db)
+                log_audit(
+                    db,
+                    action="classes_swapped",
+                    target_type="class",
+                    target_id=f"{cls_a['id']}<->{cls_b['id']}",
+                    details={
+                        "classA": {"id": cls_a["id"], "title": cls_a["title"], "from": room_a, "to": room_b},
+                        "classB": {"id": cls_b["id"], "title": cls_b["title"], "from": room_b, "to": room_a},
+                    },
+                )
+                updated_a = db.execute("SELECT * FROM classes WHERE id = ?", (cls_a["id"],)).fetchone()
+                updated_b = db.execute("SELECT * FROM classes WHERE id = ?", (cls_b["id"],)).fetchone()
+                return jsonify(
+                    {
+                        "ok": True,
+                        "mode": "swap",
+                        "classes": [serialize_class(updated_a), serialize_class(updated_b)],
+                        "stateVersion": state_version,
+                    }
+                )
+
+            # Single move to target_room_id (or unassigned if None)
+            if target_room_id is not None:
+                if not db.execute("SELECT 1 FROM rooms WHERE id = ?", (target_room_id,)).fetchone():
+                    return jsonify({"error": f"Room '{target_room_id}' does not exist"}), 404
+                if not cls_a["cancelled"]:
+                    conflict = find_overlapping_class(
+                        db,
+                        target_room_id,
+                        cls_a["day"],
+                        cls_a["start_time"],
+                        cls_a["end_time"],
+                        date=cls_a["date"],
+                        exclude_class_id=cls_a["id"],
+                    )
+                    if conflict:
+                        return (
+                            jsonify(
+                                {
+                                    "error": (
+                                        f"Room {target_room_id} is busy on {cls_a['day']}: "
+                                        f"'{conflict['title']}' ({conflict['start_time']}–{conflict['end_time']}). "
+                                        "Use Exchange to swap rooms."
+                                    ),
+                                    "code": "SCHEDULE_OVERLAP",
+                                    "conflict": conflict,
+                                }
+                            ),
+                            409,
+                        )
+
+            prev_room = cls_a["room_id"]
+            db.execute(
+                "UPDATE classes SET room_id = ?, source = 'admin', version = version + 1, updated_at = ? WHERE id = ?",
+                (target_room_id, now, cls_a["id"]),
+            )
+            state_version = bump_state_version(db)
+            log_audit(
+                db,
+                action="class_moved",
+                target_type="class",
+                target_id=str(cls_a["id"]),
+                details={"title": cls_a["title"], "from": prev_room, "to": target_room_id},
+            )
+            updated = db.execute("SELECT * FROM classes WHERE id = ?", (cls_a["id"],)).fetchone()
+            return jsonify(
+                {
+                    "ok": True,
+                    "mode": "move",
+                    "class": serialize_class(updated),
+                    "stateVersion": state_version,
+                }
+            )
+    except ValueError as exc:
+        return jsonify({"error": str(exc), "code": "SCHEDULE_OVERLAP"}), 409

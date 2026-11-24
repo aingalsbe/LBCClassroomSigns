@@ -5,6 +5,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.config import load_config, validate_security_config
 from app.db import close_db, connect, init_db
+from app.routes.age_groups import age_groups_bp
 from app.routes.audit import audit_bp
 from app.routes.auth import auth_bp
 from app.routes.classes import classes_bp
@@ -59,6 +60,7 @@ def create_app(test_config=None) -> Flask:
     app.register_blueprint(auth_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(audit_bp)
+    app.register_blueprint(age_groups_bp)
     app.register_blueprint(imports_bp)
     app.register_blueprint(state_bp)
     app.register_blueprint(rooms_bp)

@@ -16,7 +16,7 @@ DEFAULT_AGE_GROUPS = [
     {
         "id": "kids",
         "label": "Kids",
-        "banner_bg": "#0284c7",
+        "banner_bg": "#0369a1",
         "banner_text": "#ffffff",
         "badge_bg": "rgba(14, 165, 233, 0.2)",
         "badge_text": "#7dd3fc",
