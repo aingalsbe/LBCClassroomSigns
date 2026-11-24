@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 
 from app.db import bump_state_version, get_db, utc_now_iso, write_transaction
 from app.routes.auth import require_admin
+from app.services.audit import log_audit
 from app.services.schedule import (
     VALID_DAYS,
     find_overlapping_class,
@@ -133,6 +134,13 @@ def create_class():
         )
         class_id = cur.lastrowid
         state_version = bump_state_version(db)
+        log_audit(
+            db,
+            action="class_created",
+            target_type="class",
+            target_id=str(class_id),
+            details={"roomId": room_id, "ageGroupId": age_group_id, "title": title, "day": day},
+        )
         row = db.execute("SELECT * FROM classes WHERE id = ?", (class_id,)).fetchone()
 
     return jsonify({"ok": True, "class": serialize_class(row), "stateVersion": state_version}), 201
@@ -287,6 +295,13 @@ def update_class(class_id: int):
             ),
         )
         state_version = bump_state_version(db)
+        log_audit(
+            db,
+            action="class_updated",
+            target_type="class",
+            target_id=str(class_id),
+            details={"title": title, "fields": sorted(k for k in body.keys() if k != "version"), "cancelled": bool(cancelled)},
+        )
         updated = db.execute("SELECT * FROM classes WHERE id = ?", (class_id,)).fetchone()
 
     return jsonify({"ok": True, "class": serialize_class(updated), "stateVersion": state_version})
@@ -297,10 +312,17 @@ def update_class(class_id: int):
 def delete_class(class_id: int):
     db = get_db()
     with write_transaction(db):
-        existing = db.execute("SELECT id FROM classes WHERE id = ?", (class_id,)).fetchone()
+        existing = db.execute("SELECT id, title, room_id FROM classes WHERE id = ?", (class_id,)).fetchone()
         if not existing:
             return jsonify({"error": f"Class #{class_id} not found"}), 404
         db.execute("DELETE FROM classes WHERE id = ?", (class_id,))
         state_version = bump_state_version(db)
+        log_audit(
+            db,
+            action="class_deleted",
+            target_type="class",
+            target_id=str(class_id),
+            details={"title": existing["title"], "roomId": existing["room_id"]},
+        )
 
     return jsonify({"ok": True, "deletedClassId": class_id, "stateVersion": state_version})

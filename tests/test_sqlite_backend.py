@@ -8,7 +8,14 @@ import sys
 import pytest
 
 from app import create_app
-from app.db import bump_state_version, connect, init_db, utc_now_iso, write_transaction
+from app.db import connect, init_db, utc_now_iso
+
+
+def login_as_admin(client, username="admin", password="TestPassword123!"):
+    res = client.post("/api/login", json={"username": username, "password": password})
+    assert res.status_code == 200, res.get_data(as_text=True)
+    token = res.get_json()["csrfToken"]
+    return {"X-CSRF-Token": token}
 
 
 @pytest.fixture
@@ -19,9 +26,11 @@ def app_instance(tmp_path):
             "TESTING": True,
             "DB_PATH": db_path,
             "LEGACY_JSON_PATH": tmp_path / "schedule.json",
-            "ADMIN_PASSWORD": "test-password",
-            "SECRET_KEY": "test-secret-key-for-unit-tests",
+            "INITIAL_ADMIN_USERNAME": "admin",
+            "INITIAL_ADMIN_PASSWORD": "TestPassword123!",
+            "SECRET_KEY": "test-secret-key-for-unit-tests-32bytes!",
             "BUILD_ID": "test-build-1",
+            "LOGIN_IP_MAX_ATTEMPTS": 100,
         }
     )
     return app
@@ -33,11 +42,10 @@ def client(app_instance):
 
 
 @pytest.fixture
-def admin_client(app_instance):
+def admin_session(app_instance):
     c = app_instance.test_client()
-    res = c.post("/api/login", json={"password": "test-password"})
-    assert res.status_code == 200
-    return c
+    headers = login_as_admin(c)
+    return c, headers
 
 
 def test_health_and_wal_mode(client):
@@ -95,17 +103,19 @@ def test_legacy_json_auto_migration_and_idempotency(tmp_path):
     assert by_title["Family"]["cancelled"] is True
     assert (tmp_path / "schedule.json.migrated.bak").exists()
 
-    # Second boot must be idempotent and not duplicate rows
     app2 = create_app({"TESTING": True, "DB_PATH": db_path, "LEGACY_JSON_PATH": legacy_path})
     state2 = app2.test_client().get("/api/state").get_json()
     assert len(state2["scheduleList"]) == 2
 
 
-def test_relational_foreign_key_constraints(app_instance, admin_client):
+def test_relational_foreign_key_constraints(app_instance, admin_session):
+    admin_client, headers = admin_session
+
     # 1. Room can exist with 0 classes
     r_res = admin_client.post(
         "/api/rooms",
         json={"id": "WC 101", "name": "WC 101 (Cafe)", "note": "", "defaultAgeGroupId": None},
+        headers=headers,
     )
     assert r_res.status_code == 201
     assert r_res.get_json()["room"]["id"] == "WC 101"
@@ -114,10 +124,10 @@ def test_relational_foreign_key_constraints(app_instance, admin_client):
     bad_class = admin_client.post(
         "/api/classes",
         json={"roomId": "WC 101", "day": "Sunday", "start": "09:30", "end": "10:45", "title": "No Age Group"},
+        headers=headers,
     )
     assert bad_class.status_code == 400
 
-    # Verify DB-level NOT NULL constraint directly
     conn = connect(app_instance.config["DB_PATH"])
     try:
         with pytest.raises(sqlite3.IntegrityError):
@@ -143,16 +153,17 @@ def test_relational_foreign_key_constraints(app_instance, admin_client):
             "title": "Senior Adults 7",
             "leader": "Dan Griffin",
         },
+        headers=headers,
     )
     assert unassigned.status_code == 201
     cls = unassigned.get_json()["class"]
     assert cls["roomId"] is None
     assert cls["ageGroupId"] == "seniors"
 
-    # Assign class to WC 101
     assigned = admin_client.patch(
         f"/api/classes/{cls['id']}",
         json={"roomId": "WC 101", "version": cls["version"]},
+        headers=headers,
     )
     assert assigned.status_code == 200
     assert assigned.get_json()["class"]["roomId"] == "WC 101"
@@ -165,8 +176,8 @@ def test_relational_foreign_key_constraints(app_instance, admin_client):
     finally:
         conn.close()
 
-    # 5. Deleting a Room sets classes.room_id = NULL (ON DELETE SET NULL) instead of losing classes
-    del_room = admin_client.delete("/api/rooms/WC%20101")
+    # 5. Deleting a Room sets classes.room_id = NULL (ON DELETE SET NULL)
+    del_room = admin_client.delete("/api/rooms/WC%20101", headers=headers)
     assert del_room.status_code == 200
     assert del_room.get_json()["unassignedClassCount"] == 1
 
@@ -174,7 +185,8 @@ def test_relational_foreign_key_constraints(app_instance, admin_client):
     assert any(c["id"] == cls["id"] and c["roomId"] is None for c in unassigned_list)
 
 
-def test_multi_age_room_and_natural_sorting(admin_client):
+def test_multi_age_room_and_natural_sorting(admin_session):
+    admin_client, headers = admin_session
     payload = {
         "roomsMap": {
             "WC 102": {"name": "WC 102 (Pastors Reception)", "ageGroup": "Seniors"},
@@ -216,11 +228,10 @@ def test_multi_age_room_and_natural_sorting(admin_client):
         ],
         "preserveRoomOverrides": True,
     }
-    res = admin_client.post("/api/schedule/replace", json=payload)
+    res = admin_client.post("/api/schedule/replace", json=payload, headers=headers)
     assert res.status_code == 200
     state = res.get_json()["state"]
 
-    # Verify per-class ageGroupId preserved on WC 101 (not overwritten by last row!)
     wc101_classes = [c for c in state["scheduleList"] if c["room"] == "WC 101"]
     assert [(c["start"], c["ageGroupId"], c["cancelled"]) for c in wc101_classes] == [
         ("08:00", "seniors", False),
@@ -228,26 +239,26 @@ def test_multi_age_room_and_natural_sorting(admin_client):
         ("11:00", "seniors", True),
     ]
 
-    # Natural sort order: numeric rooms before alpha prefixes, WC 101 before WC 102
     room_ids = [r["id"] for r in state["rooms"]]
     assert room_ids == ["232-234", "Foundry", "WC 101", "WC 102"]
 
-    # Set a room notice + override, re-upload with preserveRoomOverrides=True, verify kept
     r_ver = state["roomsMap"]["WC 101"]["version"]
     upd = admin_client.patch(
         "/api/rooms/WC%20101",
         json={"note": "Moved to Fellowship Hall", "overrideAgeGroupId": "special", "version": r_ver},
+        headers=headers,
     )
     assert upd.status_code == 200
 
-    res2 = admin_client.post("/api/schedule/replace", json=payload)
+    res2 = admin_client.post("/api/schedule/replace", json=payload, headers=headers)
     assert res2.status_code == 200
     wc101_after = res2.get_json()["state"]["roomsMap"]["WC 101"]
     assert wc101_after["note"] == "Moved to Fellowship Hall"
     assert wc101_after["overrideAgeGroupId"] == "special"
 
 
-def test_etag_polling_and_304(client, admin_client):
+def test_etag_polling_and_304(client, admin_session):
+    admin_client, headers = admin_session
     r1 = client.get("/api/state")
     assert r1.status_code == 200
     etag1 = r1.headers["ETag"]
@@ -257,8 +268,7 @@ def test_etag_polling_and_304(client, admin_client):
     assert r2.status_code == 304
     assert r2.data == b""
 
-    # Mutate settings -> stateVersion & ETag must change
-    s_res = admin_client.patch("/api/settings", json={"theme": "light"})
+    s_res = admin_client.patch("/api/settings", json={"theme": "light"}, headers=headers)
     assert s_res.status_code == 200
     assert s_res.get_json()["settings"]["theme"] == "light"
 
@@ -268,23 +278,29 @@ def test_etag_polling_and_304(client, admin_client):
     assert r3.get_json()["settings"]["theme"] == "light"
 
 
-def test_optimistic_concurrency_and_overlap_checks(admin_client):
+def test_optimistic_concurrency_and_overlap_checks(admin_session):
+    admin_client, headers = admin_session
     state = admin_client.get("/api/state").get_json()
     room = state["roomsMap"]["101"]
 
-    # First edit succeeds (version 1 -> 2)
-    ok = admin_client.patch("/api/rooms/101", json={"note": "First edit", "version": room["version"]})
+    ok = admin_client.patch(
+        "/api/rooms/101",
+        json={"note": "First edit", "version": room["version"]},
+        headers=headers,
+    )
     assert ok.status_code == 200
     assert ok.get_json()["room"]["version"] == room["version"] + 1
 
-    # Second edit using stale version 1 gets 409 VERSION_CONFLICT
-    stale = admin_client.patch("/api/rooms/101", json={"note": "Stale edit", "version": room["version"]})
+    stale = admin_client.patch(
+        "/api/rooms/101",
+        json={"note": "Stale edit", "version": room["version"]},
+        headers=headers,
+    )
     assert stale.status_code == 409
     body = stale.get_json()
     assert body["code"] == "VERSION_CONFLICT"
     assert body["current"]["note"] == "First edit"
 
-    # Overlap check on class creation (Room 101 has Sunday 09:00-10:15)
     overlap = admin_client.post(
         "/api/classes",
         json={
@@ -295,29 +311,38 @@ def test_optimistic_concurrency_and_overlap_checks(admin_client):
             "end": "10:30",
             "title": "Overlapping Class",
         },
+        headers=headers,
     )
     assert overlap.status_code == 409
     assert overlap.get_json()["code"] == "SCHEDULE_OVERLAP"
 
 
-def test_auth_and_settings_validation(client, admin_client):
+def test_auth_and_settings_validation(client, admin_session):
+    admin_client, headers = admin_session
     assert client.post("/api/rooms", json={"id": "999", "name": "Nope"}).status_code == 401
     assert client.patch("/api/rooms/101", json={"note": "Nope"}).status_code == 401
     assert client.post("/api/classes", json={"ageGroupId": "adults"}).status_code == 401
     assert client.patch("/api/settings", json={"theme": "light"}).status_code == 401
 
-    assert admin_client.patch("/api/settings", json={"theme": "neon"}).status_code == 400
-    assert admin_client.patch("/api/settings", json={"timezone": "Not/A_Zone"}).status_code == 400
-    ok = admin_client.patch("/api/settings", json={"theme": "dark", "timezone": "America/Chicago"})
+    assert admin_client.patch("/api/settings", json={"theme": "neon"}, headers=headers).status_code == 400
+    assert admin_client.patch("/api/settings", json={"timezone": "Not/A_Zone"}, headers=headers).status_code == 400
+    ok = admin_client.patch(
+        "/api/settings",
+        json={"theme": "dark", "timezone": "America/Chicago"},
+        headers=headers,
+    )
     assert ok.status_code == 200
 
 
 def test_multithreaded_wal_concurrency(app_instance):
-    # Pre-create 8 rooms so 8 writer threads update distinct rooms + 4 reader threads poll concurrently
     setup_client = app_instance.test_client()
-    setup_client.post("/api/login", json={"password": "test-password"})
+    setup_headers = login_as_admin(setup_client)
     for i in range(8):
-        res = setup_client.post("/api/rooms", json={"id": f"T{i}", "name": f"Thread Room {i}"})
+        res = setup_client.post(
+            "/api/rooms",
+            json={"id": f"T{i}", "name": f"Thread Room {i}"},
+            headers=setup_headers,
+        )
         assert res.status_code == 201
 
     initial_version = setup_client.get("/api/health").get_json()["stateVersion"]
@@ -325,9 +350,13 @@ def test_multithreaded_wal_concurrency(app_instance):
 
     def writer(idx):
         c = app_instance.test_client()
-        assert c.post("/api/login", json={"password": "test-password"}).status_code == 200
+        hdrs = login_as_admin(c)
         for step in range(writes_per_worker):
-            resp = c.patch(f"/api/rooms/T{idx}", json={"note": f"worker-{idx}-step-{step}"})
+            resp = c.patch(
+                f"/api/rooms/T{idx}",
+                json={"note": f"worker-{idx}-step-{step}"},
+                headers=hdrs,
+            )
             assert resp.status_code == 200, f"Write failed: {resp.status_code} {resp.get_data(as_text=True)}"
         return True
 

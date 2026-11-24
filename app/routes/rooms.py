@@ -4,6 +4,7 @@ from flask import Blueprint, jsonify, request
 
 from app.db import bump_state_version, get_db, utc_now_iso, write_transaction
 from app.routes.auth import require_admin
+from app.services.audit import log_audit
 from app.services.schedule import natural_sort_key, resolve_age_group_id, serialize_room
 
 
@@ -60,6 +61,7 @@ def create_room():
                 (room_id, name, note, default_ag, override_ag, now),
             )
             state_version = bump_state_version(db)
+            log_audit(db, action="room_created", target_type="room", target_id=room_id, details={"name": name})
             row = db.execute("SELECT * FROM rooms WHERE id = ?", (room_id,)).fetchone()
     except sqlite3.IntegrityError:
         return jsonify({"error": f"Room '{room_id}' already exists"}), 409
@@ -137,6 +139,13 @@ def update_room(room_id: str):
             (name, note, default_ag, override_ag, new_version, now, room_id),
         )
         state_version = bump_state_version(db)
+        log_audit(
+            db,
+            action="room_updated",
+            target_type="room",
+            target_id=room_id,
+            details={"fields": sorted(k for k in body.keys() if k != "version")},
+        )
         updated = db.execute("SELECT * FROM rooms WHERE id = ?", (room_id,)).fetchone()
 
     return jsonify({"ok": True, "room": serialize_room(updated), "stateVersion": state_version})
@@ -157,6 +166,13 @@ def delete_room(room_id: str):
         # Foreign key ON DELETE SET NULL automatically keeps classes intact as unassigned
         db.execute("DELETE FROM rooms WHERE id = ?", (room_id,))
         state_version = bump_state_version(db)
+        log_audit(
+            db,
+            action="room_deleted",
+            target_type="room",
+            target_id=room_id,
+            details={"unassignedClassCount": affected_classes},
+        )
 
     return jsonify(
         {

@@ -2,6 +2,7 @@ from flask import Blueprint, current_app, jsonify, make_response, request
 
 from app.db import bump_state_version, get_db, get_state_version, utc_now_iso, write_transaction
 from app.routes.auth import require_admin
+from app.services.audit import log_audit
 from app.services.schedule import (
     build_state_payload,
     normalize_date,
@@ -189,6 +190,17 @@ def replace_schedule():
             )
 
         state_version = bump_state_version(db)
+        log_audit(
+            db,
+            action="schedule_replaced",
+            target_type="schedule",
+            target_id="all",
+            details={
+                "roomCount": len(validated_rooms),
+                "classCount": len(validated_classes),
+                "preserveRoomOverrides": preserve_overrides,
+            },
+        )
 
     payload = build_state_payload(
         db,

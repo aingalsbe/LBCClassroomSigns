@@ -4,6 +4,7 @@ from flask import Blueprint, current_app, jsonify, request
 
 from app.db import bump_state_version, get_db, write_transaction
 from app.routes.auth import require_admin
+from app.services.audit import log_audit
 from app.services.schedule import get_settings_dict
 
 
@@ -47,6 +48,8 @@ def update_settings():
                 (key, value),
             )
         state_version = bump_state_version(db)
+        if updates:
+            log_audit(db, action="settings_updated", target_type="settings", target_id="app", details=updates)
 
     return jsonify(
         {
