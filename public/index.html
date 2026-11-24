@@ -3,15 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="LBC Signs" />
+  <meta name="theme-color" content="#1e293b" />
   <title>Classroom Door Display</title>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-  </style>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/assets/LBC-logo.png" />
+  <link rel="stylesheet" href="/assets/styles.css" />
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
 
@@ -19,6 +18,9 @@
   <header id="topHeader" class="bg-slate-900/90 border-b border-slate-800 px-4 py-3">
     <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
+        <a id="headerLogoPlate" href="/" class="inline-flex items-center rounded-lg bg-white px-2.5 py-1 shadow-sm shrink-0" title="Lenexa Baptist Church — Classroom Door Display">
+          <img src="/assets/LBC-logo.png" alt="Lenexa Baptist Church" class="h-7 sm:h-8 w-auto object-contain" />
+        </a>
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
           Live Sync
         </span>
@@ -57,6 +59,10 @@
             iPad Kiosk Mode
           </button>
         </div>
+        <span id="currentUserBadge" class="hidden inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700"></span>
+        <button id="changePwdBtn" type="button" class="hidden px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition">
+          Password
+        </button>
         <button id="logoutBtn" type="button" class="hidden px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-rose-600/30 text-slate-300 hover:text-rose-200 border border-slate-700 transition">
           Log Out
         </button>
@@ -65,22 +71,32 @@
   </header>
 
   <!-- VIEW 1: IPAD WALL DISPLAY -->
-  <main id="viewDisplay" class="flex-1 flex items-center justify-center p-4 sm:p-8 relative">
+  <main id="viewDisplay" class="flex-1 flex items-center justify-center p-4 sm:p-8 relative transition-colors duration-300">
+    <div id="unknownRoomCard" class="hidden w-full max-w-2xl rounded-3xl bg-slate-900 border border-slate-800 p-8 sm:p-10 text-center space-y-4 shadow-2xl">
+      <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+        Room Not Found
+      </div>
+      <h2 id="unknownRoomHeading" class="text-2xl sm:text-3xl font-extrabold text-white">Room Not Configured</h2>
+      <p id="unknownRoomMessage" class="text-sm sm:text-base text-slate-400">
+        This iPad is pointed at a room that is not in the current schedule. It will load automatically as soon as the room is added.
+      </p>
+    </div>
+
     <div id="ipadFrame" class="w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-slate-800 transition-colors duration-300 bg-slate-900">
       <div id="ageBanner" class="px-6 sm:px-10 py-6 sm:py-8 flex flex-wrap items-center justify-between gap-4 transition-colors duration-300 bg-indigo-700">
         <div>
           <div class="flex items-center gap-3 mb-1">
-            <span id="ageBadge" class="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider bg-white/20 text-white backdrop-blur-sm">Adults</span>
-            <span id="statusDot" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-white/90">
+            <span id="ageBadge" class="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider bg-white/20 backdrop-blur-sm">Adults</span>
+            <span id="statusDot" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium opacity-90">
               <span id="statusIndicator" class="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse"></span>
               <span id="statusText">In Session</span>
             </span>
           </div>
-          <h1 id="roomTitle" class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">Room 101</h1>
+          <h1 id="roomTitle" class="text-3xl sm:text-5xl font-extrabold tracking-tight">Room 101</h1>
         </div>
-        <div class="text-left sm:text-right text-white/95">
+        <div class="text-left sm:text-right">
           <div id="displayTime" class="text-2xl sm:text-4xl font-bold tabular-nums">9:30 AM</div>
-          <div id="displayDay" class="text-sm sm:text-base font-medium text-white/80">Sunday</div>
+          <div id="displayDay" class="text-sm sm:text-base font-medium opacity-80">Sunday</div>
         </div>
       </div>
 
@@ -89,25 +105,45 @@
         <span id="roomNoteText"></span>
       </div>
 
-      <div class="p-6 sm:p-10 space-y-6 bg-slate-900">
-        <div class="rounded-2xl bg-slate-800/70 border border-slate-700/70 p-6 sm:p-8">
+      <div id="displayBody" class="p-6 sm:p-10 space-y-6 bg-slate-900 transition-colors duration-300">
+        <div id="currentClassCard" class="rounded-2xl bg-slate-800/70 border border-slate-700/70 p-6 sm:p-8 transition-colors duration-300">
           <div class="flex items-center justify-between gap-2 mb-2">
-            <div class="text-xs font-semibold uppercase tracking-widest text-slate-400">Current Class</div>
-            <span id="cancelledPill" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/40">Cancelled</span>
+            <div id="currentClassHeading" class="text-xs font-semibold uppercase tracking-widest text-slate-400">Current Class</div>
+            <div class="flex items-center gap-2">
+              <span id="upNextCountdown" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"></span>
+              <span id="cancelledPill" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/40">Cancelled</span>
+            </div>
           </div>
           <h2 id="currentClass" class="text-2xl sm:text-4xl font-bold text-white mb-3">—</h2>
-          <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm sm:text-base text-slate-300">
-            <div class="flex items-center gap-2"><span class="text-slate-400">Time:</span><span id="currentWindow" class="font-semibold text-white">—</span></div>
-            <div class="flex items-center gap-2"><span class="text-slate-400">Leader:</span><span id="currentLeader" class="font-semibold text-white">—</span></div>
+          <div id="currentMetaRow" class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm sm:text-base text-slate-300">
+            <div class="flex items-center gap-2"><span id="currentTimeLabel" class="text-slate-400">Time:</span><span id="currentWindow" class="font-semibold text-white">—</span></div>
+            <div class="flex items-center gap-2"><span id="currentLeaderLabel" class="text-slate-400">Leader:</span><span id="currentLeader" class="font-semibold text-white">—</span></div>
+          </div>
+          <div id="classProgressWrap" class="hidden mt-5 space-y-1.5">
+            <div id="classProgressTrack" class="w-full h-3 rounded-full bg-slate-700/80 overflow-hidden">
+              <div id="classProgressBar" class="h-full rounded-full transition-all duration-500" style="width:0%;background-color:#4338ca"></div>
+            </div>
+            <div class="flex items-center justify-end">
+              <span id="classProgressText" class="text-xs sm:text-sm font-semibold text-slate-400 tabular-nums"></span>
+            </div>
           </div>
         </div>
 
-        <div class="rounded-2xl bg-slate-800/40 border border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div id="upNextCard" class="rounded-2xl bg-slate-800/40 border border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3 transition-colors duration-300">
           <div class="flex items-center gap-3">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Up Next</span>
+            <span id="upNextLabel" class="text-xs font-bold uppercase tracking-wider text-slate-400">Up Next</span>
             <span id="nextClass" class="text-base sm:text-lg font-semibold text-slate-200">—</span>
           </div>
           <span id="nextWindow" class="text-sm font-medium text-slate-400"></span>
+        </div>
+
+        <div id="displayFooter" class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 pt-1">
+          <div>
+            <span id="offlineBadge" class="hidden inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              Offline · showing saved schedule
+            </span>
+          </div>
+          <span id="lastUpdatedText" class="tabular-nums"></span>
         </div>
       </div>
     </div>
@@ -122,20 +158,24 @@
     <form id="loginForm" class="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 sm:p-8 space-y-5 shadow-2xl">
       <div>
         <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-3">
-          Single-Admin Access
+          Staff Admin Access
         </div>
         <h2 class="text-xl sm:text-2xl font-bold text-white">Admin Sign In</h2>
         <p class="text-sm text-slate-400 mt-1">
-          Door Displays stay open for all 30+ iPads, while schedule uploads and cancellations require the admin password.
+          Door Displays stay open for all 30+ iPads, while schedule uploads and edits require a named staff admin account.
         </p>
       </div>
       <label class="block text-xs text-slate-400">
-        <span class="block mb-1.5 font-medium text-slate-300">Admin Password</span>
-        <input id="adminPasswordInput" type="password" placeholder="Enter admin password" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-xl px-3.5 py-2.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <span class="block mb-1.5 font-medium text-slate-300">Username</span>
+        <input id="adminUsernameInput" type="text" autocomplete="username" placeholder="e.g. admin" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-xl px-3.5 py-2.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </label>
+      <label class="block text-xs text-slate-400">
+        <span class="block mb-1.5 font-medium text-slate-300">Password</span>
+        <input id="adminPasswordInput" type="password" autocomplete="current-password" placeholder="Enter password" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-xl px-3.5 py-2.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </label>
       <div id="loginError" class="hidden rounded-xl px-3.5 py-2.5 text-xs font-medium bg-rose-500/15 text-rose-300 border border-rose-500/30"></div>
       <button type="submit" class="w-full py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
-        Unlock Admin Controls
+        Sign In
       </button>
     </form>
   </section>
@@ -148,27 +188,132 @@
           <div>
             <h2 class="text-xl sm:text-2xl font-bold text-white">Upload Weekly Schedule Spreadsheet</h2>
             <p class="text-sm text-slate-400 mt-1">
-              Load an <code class="text-indigo-300">.xlsx</code>, <code class="text-indigo-300">.xls</code>, or <code class="text-indigo-300">.csv</code> file with all 30+ rooms. Changes sync to every iPad automatically.
+              Upload a validated <code class="text-indigo-300">.xlsx</code> or <code class="text-indigo-300">.csv</code> file (max 5 MB). Nothing goes live until you review the preview and click <strong>Publish Schedule</strong>.
             </p>
           </div>
           <button id="downloadSampleBtn" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 transition">
-            Download Sample .xlsx
+            Download Template .xlsx
           </button>
         </div>
 
         <label id="dropZone" for="fileInput" class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-700 hover:border-indigo-500 bg-slate-950/60 p-8 text-center cursor-pointer transition">
           <div class="text-3xl mb-2">📄</div>
-          <div class="text-sm sm:text-base font-semibold text-slate-200">Click to choose an Excel or CSV file, or drag &amp; drop it here</div>
-          <div class="text-xs text-slate-400 mt-1">Expected columns: <span class="text-slate-300">Room, RoomName, AgeGroup, Day, StartTime, EndTime, ClassTitle, Leader</span></div>
-          <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
+          <div class="text-sm sm:text-base font-semibold text-slate-200">Click to choose an .xlsx or .csv file, or drag &amp; drop it here</div>
+          <div class="text-xs text-slate-400 mt-1">Required columns: <span class="text-slate-300">Room, AgeGroup, Day, StartTime, EndTime, ClassTitle</span> · Optional: <span class="text-slate-300">RoomName, Leader, Cancelled, Topic, Note</span></div>
+          <input id="fileInput" type="file" accept=".xlsx,.csv" class="hidden" />
         </label>
 
         <div id="uploadStatus" class="hidden rounded-xl px-4 py-3 text-sm font-medium"></div>
       </div>
 
+      <!-- TWO-STEP PREVIEW & DIFF PANEL -->
+      <div id="importPreviewPanel" class="hidden rounded-2xl bg-slate-900 border border-indigo-500/40 p-6 space-y-5 shadow-xl">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-2">
+              Step 2 — Review Before Publishing
+            </div>
+            <h3 id="previewFilename" class="text-lg font-bold text-white">Preview</h3>
+            <p id="previewSummaryText" class="text-xs sm:text-sm text-slate-400 mt-0.5"></p>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <button id="cancelPreviewBtn" type="button" class="px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+              Cancel
+            </button>
+            <button id="commitImportBtn" type="button" class="px-4 py-2 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition">
+              Publish Schedule
+            </button>
+          </div>
+        </div>
+
+        <div id="previewDiffBadges" class="flex flex-wrap gap-2"></div>
+
+        <div id="previewErrorsBox" class="hidden rounded-xl bg-rose-500/10 border border-rose-500/30 p-4 space-y-2">
+          <div class="text-xs font-bold uppercase tracking-wider text-rose-300">Blocking Errors — Fix in Spreadsheet Before Publishing</div>
+          <ul id="previewErrorsList" class="text-xs sm:text-sm text-rose-200 space-y-1 list-disc list-inside"></ul>
+        </div>
+
+        <div id="previewWarningsBox" class="hidden rounded-xl bg-amber-500/10 border border-amber-500/30 p-4 space-y-2">
+          <div class="text-xs font-bold uppercase tracking-wider text-amber-300">Warnings</div>
+          <ul id="previewWarningsList" class="text-xs sm:text-sm text-amber-200 space-y-1 list-disc list-inside"></ul>
+        </div>
+
+        <div id="previewOptionsBox" class="rounded-xl bg-slate-950/60 border border-slate-800 p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div class="space-y-2">
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Import Mode</div>
+            <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+              <input type="radio" name="importMode" value="replace" checked class="accent-indigo-500" />
+              <span>Replace full schedule (snapshots current schedule first)</span>
+            </label>
+            <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+              <input type="radio" name="importMode" value="merge" class="accent-indigo-500" />
+              <span>Merge / update only rooms listed in this file</span>
+            </label>
+          </div>
+          <div class="space-y-2">
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Preserve Live Admin Changes</div>
+            <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+              <input id="optPreserveNotices" type="checkbox" checked class="accent-indigo-500" />
+              <span>Keep existing Door Notices</span>
+            </label>
+            <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+              <input id="optPreserveOverrides" type="checkbox" checked class="accent-indigo-500" />
+              <span>Keep manual Room Color Overrides</span>
+            </label>
+            <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+              <input id="optPreserveAdminClasses" type="checkbox" checked class="accent-indigo-500" />
+              <span>Keep Admin-edited / added classes</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-800 max-h-80 overflow-y-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-800/80 text-xs uppercase text-slate-400 sticky top-0">
+              <tr>
+                <th class="px-3 py-2.5">Row</th>
+                <th class="px-3 py-2.5">Room</th>
+                <th class="px-3 py-2.5">Age Group</th>
+                <th class="px-3 py-2.5">Day &amp; Time</th>
+                <th class="px-3 py-2.5">Class</th>
+                <th class="px-3 py-2.5">Leader</th>
+              </tr>
+            </thead>
+            <tbody id="previewRowsBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- IMPORT HISTORY & ROLLBACK -->
       <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-          <h3 class="text-base font-semibold text-white">Loaded Schedule Preview</h3>
+          <div>
+            <h3 class="text-base font-semibold text-white">Import History &amp; One-Click Rollback</h3>
+            <p class="text-xs text-slate-400">Every publish automatically snapshots the previous schedule (last 10 kept).</p>
+          </div>
+          <button id="refreshHistoryBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+            Refresh
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
+              <tr>
+                <th class="px-4 py-3">Date</th>
+                <th class="px-4 py-3">Snapshot</th>
+                <th class="px-4 py-3">Uploaded By</th>
+                <th class="px-4 py-3">Previous State</th>
+                <th class="px-4 py-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="importHistoryBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+          <h3 class="text-base font-semibold text-white">Current Live Schedule</h3>
           <span id="tableCount" class="text-xs text-slate-400">0 rows</span>
         </div>
         <div class="overflow-x-auto">
@@ -193,605 +338,452 @@
   <!-- VIEW 4: ADMIN PANEL -->
   <section id="viewAdmin" class="hidden flex-1 p-4 sm:p-8">
     <div class="max-w-6xl mx-auto space-y-6">
-      <div class="rounded-2xl bg-slate-900 border border-slate-800 p-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 class="text-xl sm:text-2xl font-bold text-white">Admin Control Panel</h2>
-          <p class="text-sm text-slate-400 mt-1">Override room age colors, copy direct iPad kiosk links, or cancel &amp; edit individual classes.</p>
+      <div class="rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-white">Admin Control Panel</h2>
+            <p class="text-sm text-slate-400 mt-1">Manage Age Groups &amp; Colors, Rooms, Classes, Display Theme, Staff Accounts, and Activity.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5">
+            <span id="adminSaveStatus" class="hidden inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border"></span>
+            <button id="exportExcelBtn" type="button" class="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
+              Export .xlsx
+            </button>
+          </div>
         </div>
-        <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-          <input id="adminSearch" type="search" placeholder="Filter rooms (e.g. 101, Youth)..." class="flex-1 sm:w-56 bg-slate-800 text-slate-100 text-sm rounded-xl px-3.5 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          <button id="exportExcelBtn" type="button" class="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
-            Export .xlsx
-          </button>
+        <div class="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-4">
+          <button id="subTabRooms" type="button" data-admin-subtab="rooms" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-indigo-600 text-white transition">Rooms</button>
+          <button id="subTabClasses" type="button" data-admin-subtab="classes" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">Classes</button>
+          <button id="subTabAgeGroups" type="button" data-admin-subtab="agegroups" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">Age Groups &amp; Colors</button>
+          <button id="subTabSettings" type="button" data-admin-subtab="settings" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">Settings, Staff &amp; Activity</button>
         </div>
       </div>
 
-      <div id="adminToast" class="hidden rounded-xl px-4 py-2.5 text-sm font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"></div>
+      <div id="adminToast" class="hidden rounded-xl px-4 py-2.5 text-sm font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center justify-between gap-3">
+        <span id="adminToastText"></span>
+        <button id="adminUndoBtn" type="button" class="hidden px-2.5 py-1 rounded-lg text-xs font-bold bg-white/10 hover:bg-white/20 text-white transition">Undo</button>
+      </div>
 
-      <div class="space-y-3">
-        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Rooms — Age Color Overrides, Door Notices &amp; iPad Links</h3>
+      <!-- SUB-TAB 1: ROOMS -->
+      <div id="adminSubRooms" class="space-y-6">
+        <div class="rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-semibold text-white">Add Room</h3>
+              <p class="text-xs text-slate-400">Rooms live independently and can start with 0 scheduled classes.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <input id="adminSearch" type="search" placeholder="Filter rooms (e.g. WC 101)..." class="w-48 sm:w-56 bg-slate-800 text-slate-100 text-sm rounded-xl px-3 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <button id="clearNoticesBtn" type="button" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition">
+                Clear All Door Notices
+              </button>
+            </div>
+          </div>
+          <form id="createRoomForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Room ID</span>
+              <input id="newRoomId" type="text" placeholder="e.g. WC 101" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Display Name</span>
+              <input id="newRoomName" type="text" placeholder="e.g. WC 101 (Cafe)" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Default Empty-Room Age Group</span>
+              <select id="newRoomDefaultAge" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Door Notice (Optional)</span>
+              <input id="newRoomNote" type="text" placeholder="Optional notice" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
+              + Add Room
+            </button>
+          </form>
+        </div>
+
         <div id="adminRoomsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
 
-      <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+      <!-- SUB-TAB 2: CLASSES -->
+      <div id="adminSubClasses" class="hidden space-y-6">
+        <div class="rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4">
           <div>
-            <h3 class="text-base font-semibold text-white">Scheduled Classes — Cancellations &amp; Edits</h3>
-            <p class="text-xs text-slate-400">Click Cancel to immediately flag a class on its room's iPad screen.</p>
+            <h3 class="text-base font-semibold text-white">Add Class</h3>
+            <p class="text-xs text-slate-400">Every class requires an Age Group and can be assigned to a Room now or left Unassigned.</p>
           </div>
-          <label class="flex items-center gap-2 text-xs text-slate-400">
-            <span>Filter Room</span>
-            <select id="adminRoomFilter" class="bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+          <form id="createClassForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Class Title *</span>
+              <input id="newClassTitle" type="text" placeholder="e.g. Empty Nesters 5" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Age Group *</span>
+              <select id="newClassAgeGroup" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Assigned Room</span>
+              <select id="newClassRoom" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Leader(s)</span>
+              <input id="newClassLeader" type="text" placeholder="e.g. Greg Guthrie &amp; Arlan Suderman" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Day *</span>
+              <select id="newClassDay" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="Sunday">Sunday</option>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+              </select>
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Start Time *</span>
+              <input id="newClassStart" type="time" value="09:30" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">End Time *</span>
+              <input id="newClassEnd" type="time" value="10:45" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
+              + Add Class
+            </button>
+          </form>
+        </div>
+
+        <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-semibold text-white">Scheduled Classes — Edit, Move / Swap &amp; Cancel</h3>
+              <p class="text-xs text-slate-400">Inline edits save with overlap &amp; conflict checks. Use Swap to move or exchange rooms atomically.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2.5">
+              <select id="adminRoomFilter" class="bg-slate-800 text-slate-100 text-xs sm:text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+              <select id="adminAgeFilter" class="bg-slate-800 text-slate-100 text-xs sm:text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
+                <tr>
+                  <th class="px-3 py-3">Room</th>
+                  <th class="px-3 py-3">Age Group</th>
+                  <th class="px-3 py-3">Day &amp; Time</th>
+                  <th class="px-3 py-3">Class Title</th>
+                  <th class="px-3 py-3">Leader</th>
+                  <th class="px-3 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminClassesBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 3: AGE GROUPS & COLORS -->
+      <div id="adminSubAgeGroups" class="hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <form id="ageGroupForm" class="lg:col-span-3 rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 id="agFormHeading" class="text-base font-bold text-white">Create Age Group</h3>
+              <button id="agResetFormBtn" type="button" class="hidden text-xs font-semibold text-slate-400 hover:text-white">Cancel Edit</button>
+            </div>
+            <input id="agEditId" type="hidden" value="" />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="block text-xs text-slate-400">
+                <span class="block mb-1 text-slate-300">Display Name *</span>
+                <input id="agLabelInput" type="text" placeholder="e.g. Preschool, Seniors" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-3 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </label>
+              <label class="block text-xs text-slate-400">
+                <span class="block mb-1 text-slate-300">Banner Color (#RRGGBB)</span>
+                <div class="flex items-center gap-2">
+                  <input id="agColorPicker" type="color" value="#4338ca" class="h-9 w-12 rounded-lg bg-slate-800 border border-slate-700 cursor-pointer" />
+                  <input id="agColorHex" type="text" value="#4338ca" pattern="^#[0-9a-fA-F]{6}$" required class="flex-1 bg-slate-800 text-slate-100 font-mono text-sm rounded-lg px-3 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+              </label>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="text-xs text-slate-400">Curated Accessible Swatches (WCAG AA+)</div>
+              <div id="agPaletteSwatches" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                <input id="agAutoTextCheck" type="checkbox" checked class="accent-indigo-500" />
+                <span>Auto-pick highest-contrast text color (Recommended)</span>
+              </label>
+              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                <input id="agIsDefaultCheck" type="checkbox" class="accent-indigo-500" />
+                <span>Use as default fallback group</span>
+              </label>
+            </div>
+
+            <label id="agCustomTextWrap" class="hidden block text-xs text-slate-400">
+              <span class="block mb-1 text-slate-300">Custom Banner Text Color (#RRGGBB)</span>
+              <div class="flex items-center gap-2 max-w-xs">
+                <input id="agTextPicker" type="color" value="#ffffff" class="h-9 w-12 rounded-lg bg-slate-800 border border-slate-700 cursor-pointer" />
+                <input id="agTextHex" type="text" value="#ffffff" pattern="^#[0-9a-fA-F]{6}$" class="flex-1 bg-slate-800 text-slate-100 font-mono text-sm rounded-lg px-3 py-2 border border-slate-700" />
+              </div>
+            </label>
+
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1 text-slate-300">Excel Import Aliases (comma-separated)</span>
+              <input id="agAliasesInput" type="text" placeholder="e.g. Senior Adults, Senior Ladies, 65+" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-3 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+
+            <div class="flex items-center justify-between gap-3 pt-1">
+              <span id="agContrastBadge" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border"></span>
+              <button id="agSubmitBtn" type="submit" class="px-5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
+                Create Age Group
+              </button>
+            </div>
+          </form>
+
+          <!-- LIVE MINI DOOR SIGN PREVIEW -->
+          <div class="lg:col-span-2 rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Live Door Sign Preview</h3>
+              <button id="agPreviewThemeBtn" type="button" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:text-white">
+                Preview: Dark
+              </button>
+            </div>
+            <div id="agMiniFrame" class="rounded-2xl overflow-hidden border border-slate-700 shadow-lg bg-slate-900">
+              <div id="agMiniBanner" class="px-5 py-4 flex items-center justify-between" style="background-color:#4338ca;color:#ffffff">
+                <div>
+                  <span id="agMiniBadge" class="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-white/20">Adults</span>
+                  <div class="text-xl font-extrabold mt-1">WC 101 (Cafe)</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-lg font-bold tabular-nums">9:30 AM</div>
+                  <div class="text-xs opacity-80">Sunday</div>
+                </div>
+              </div>
+              <div id="agMiniBody" class="p-4 space-y-2 bg-slate-900 text-white">
+                <div class="text-[10px] uppercase tracking-widest opacity-60 font-semibold">Current Class</div>
+                <div class="text-lg font-bold">Empty Nesters 5</div>
+                <div class="text-xs opacity-75">9:30 AM – 10:45 AM · Greg Guthrie &amp; Arlan Suderman</div>
+              </div>
+            </div>
+            <p class="text-xs text-slate-400">
+              Order below controls both dropdown order and Excel import alias priority (top group wins first).
+            </p>
+          </div>
+        </div>
+
+        <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-800">
+            <h3 class="text-base font-semibold text-white">Configured Age Groups</h3>
+            <p class="text-xs text-slate-400">Changes sync to all 30+ iPads automatically. Deleting an in-use group prompts for safe reassignment.</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
+                <tr>
+                  <th class="px-4 py-3">Order</th>
+                  <th class="px-4 py-3">Age Group &amp; Color</th>
+                  <th class="px-4 py-3">Contrast</th>
+                  <th class="px-4 py-3">Import Aliases</th>
+                  <th class="px-4 py-3">Usage</th>
+                  <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminAgeGroupsBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 4: SETTINGS, STAFF & ACTIVITY -->
+      <div id="adminSubSettings" class="hidden space-y-6">
+        <div class="rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4">
+          <div>
+            <h3 class="text-base font-semibold text-white">Door Display Appearance &amp; Timezone</h3>
+            <p class="text-xs text-slate-400">Changes apply to every wall-mounted iPad automatically on its next poll.</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+            <div>
+              <div class="text-xs font-medium text-slate-300 mb-2">iPad Door Display Theme</div>
+              <div class="inline-flex rounded-xl bg-slate-800 p-1 border border-slate-700">
+                <button id="themeDarkBtn" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition">Dark (Default)</button>
+                <button id="themeLightBtn" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">Light (Warm Off-White)</button>
+              </div>
+            </div>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1.5 text-slate-300">Church Timezone</span>
+              <select id="churchTzSelect" class="w-full bg-slate-800 text-slate-100 text-sm rounded-xl px-3 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="America/Chicago">America/Chicago (Central — Lenexa, KS)</option>
+                <option value="America/New_York">America/New_York (Eastern)</option>
+                <option value="America/Denver">America/Denver (Mountain)</option>
+                <option value="America/Los_Angeles">America/Los_Angeles (Pacific)</option>
+              </select>
+            </label>
+          </div>
+          <label class="inline-flex items-center gap-2 text-xs sm:text-sm text-slate-300 cursor-pointer pt-1">
+            <input id="showLogoCheck" type="checkbox" checked class="accent-indigo-500" />
+            <span>Show LBC Church Logo in App Header (hidden on door kiosks)</span>
           </label>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
-              <tr>
-                <th class="px-4 py-3">Room</th>
-                <th class="px-4 py-3">Day &amp; Time</th>
-                <th class="px-4 py-3">Class Title</th>
-                <th class="px-4 py-3">Leader</th>
-                <th class="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="adminClassesBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
-          </table>
+
+        <!-- STAFF ADMIN ACCOUNTS (Super Admin Only) -->
+        <div id="adminUsersSection" class="hidden rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-semibold text-white">Staff Admin Accounts</h3>
+              <p class="text-xs text-slate-400">Create named accounts so every schedule upload, edit, and cancellation is tracked in the audit log.</p>
+            </div>
+          </div>
+          <form id="createUserForm" class="p-6 border-b border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Username</span>
+              <input id="newUsername" type="text" placeholder="e.g. justin" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Display Name</span>
+              <input id="newDisplayName" type="text" placeholder="e.g. Justin Pedigo" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Temporary Password (10+ chars)</span>
+              <input id="newUserPassword" type="password" placeholder="Strong temp password" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </label>
+            <label class="block text-xs text-slate-400">
+              <span class="block mb-1">Role</span>
+              <select id="newUserRole" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="admin">Admin</option>
+                <option value="super_admin">Super Admin</option>
+              </select>
+            </label>
+            <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
+              Add Staff Account
+            </button>
+          </form>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
+                <tr>
+                  <th class="px-4 py-3">User</th>
+                  <th class="px-4 py-3">Role</th>
+                  <th class="px-4 py-3">Status</th>
+                  <th class="px-4 py-3">Last Login</th>
+                  <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminUsersBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- RECENT ACTIVITY / AUDIT LOG -->
+        <div class="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-semibold text-white">Recent Activity (Audit Log)</h3>
+              <p class="text-xs text-slate-400">Tracks admin sign-ins, failed attempts, uploads, cancellations, age-group updates, and edits.</p>
+            </div>
+            <button id="refreshAuditBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+              Refresh
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
+                <tr>
+                  <th class="px-4 py-3">Time</th>
+                  <th class="px-4 py-3">User</th>
+                  <th class="px-4 py-3">Action</th>
+                  <th class="px-4 py-3">Target</th>
+                  <th class="px-4 py-3">IP</th>
+                </tr>
+              </thead>
+              <tbody id="adminAuditBody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <script>
-    const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const AGE_THEMES = {
-      Adults:  { banner: 'bg-indigo-700',  badge: 'bg-indigo-500/20 text-indigo-300', label: 'Adults' },
-      College: { banner: 'bg-teal-700',    badge: 'bg-teal-500/20 text-teal-300',     label: 'College' },
-      Teen:    { banner: 'bg-amber-600',   badge: 'bg-amber-500/20 text-amber-300',   label: 'Teen' },
-      Kids:    { banner: 'bg-sky-600',     badge: 'bg-sky-500/20 text-sky-300',       label: 'Kids' },
-      Special: { banner: 'bg-purple-700',  badge: 'bg-purple-500/20 text-purple-300', label: 'Special Event' },
-	  Seniors: { banner: 'bg-emerald-700', badge: 'bg-emerald-500/20 text-emerald-300', label: 'Seniors' }
-    };
+  <!-- MOVE / SWAP CLASS MODAL -->
+  <div id="swapModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <form id="swapForm" class="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white">Move or Swap Room</h3>
+        <button id="closeSwapModalBtn" type="button" class="text-slate-400 hover:text-white text-sm font-semibold">Close</button>
+      </div>
+      <p id="swapClassSummary" class="text-xs text-slate-300 bg-slate-800/80 rounded-xl px-3 py-2 border border-slate-700"></p>
+      <div class="space-y-2 text-sm">
+        <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+          <input type="radio" name="swapAction" value="move" checked class="accent-indigo-500" />
+          <span>Move to another room (or Unassigned)</span>
+        </label>
+        <label class="flex items-center gap-2 text-slate-200 cursor-pointer">
+          <input type="radio" name="swapAction" value="exchange" class="accent-indigo-500" />
+          <span>Exchange rooms with another class</span>
+        </label>
+      </div>
+      <label id="swapTargetRoomWrap" class="block text-xs text-slate-400">
+        <span class="block mb-1 text-slate-300">Target Room</span>
+        <select id="swapTargetRoomSelect" class="w-full bg-slate-800 text-slate-100 text-sm rounded-xl px-3 py-2 border border-slate-700"></select>
+      </label>
+      <label id="swapExchangeWrap" class="hidden block text-xs text-slate-400">
+        <span class="block mb-1 text-slate-300">Exchange With Class</span>
+        <select id="swapExchangeClassSelect" class="w-full bg-slate-800 text-slate-100 text-sm rounded-xl px-3 py-2 border border-slate-700"></select>
+      </label>
+      <div id="swapError" class="hidden rounded-xl px-3 py-2 text-xs font-medium bg-rose-500/15 text-rose-300 border border-rose-500/30"></div>
+      <button type="submit" class="w-full py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
+        Apply Room Change
+      </button>
+    </form>
+  </div>
 
-    let roomsMap = {};
-    let scheduleList = [];
-    let nextClassId = 13;
-    let useLiveClock = false;
-    let liveClockTimer = null;
-    let isAdminUnlocked = false;
-    let pendingAdminTab = 'admin';
-    let currentTab = 'display';
+  <!-- DELETE AGE GROUP REASSIGN MODAL -->
+  <div id="deleteAgeModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <form id="deleteAgeForm" class="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white">Reassign &amp; Delete Age Group</h3>
+        <button id="closeDeleteAgeModalBtn" type="button" class="text-slate-400 hover:text-white text-sm font-semibold">Close</button>
+      </div>
+      <p id="deleteAgeSummary" class="text-xs text-amber-200 bg-amber-500/15 border border-amber-500/30 rounded-xl px-3 py-2"></p>
+      <label class="block text-xs text-slate-400">
+        <span class="block mb-1 text-slate-300">Reassign existing classes &amp; rooms to:</span>
+        <select id="deleteAgeReassignSelect" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-xl px-3 py-2 border border-slate-700"></select>
+      </label>
+      <div class="flex justify-end gap-2">
+        <button id="cancelDeleteAgeBtn" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">Cancel</button>
+        <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white">Reassign &amp; Delete</button>
+      </div>
+    </form>
+  </div>
 
-    async function fetchServerState() {
-      try {
-        const res = await fetch('/api/state');
-        if (!res.ok) return;
-        const data = await res.json();
-        roomsMap = data.roomsMap || {};
-        scheduleList = data.scheduleList || [];
-        nextClassId = data.nextClassId || (scheduleList.length + 1);
-        populateSelectors();
-        renderScheduleTable();
-        if (currentTab === 'admin') renderAdminPanel();
-        renderDisplay();
-      } catch (err) {
-        console.error('Sync error:', err);
-      }
-    }
+  <!-- CHANGE PASSWORD MODAL -->
+  <div id="passwordModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <form id="changePasswordForm" class="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white">Change Password</h3>
+        <button id="closePasswordModalBtn" type="button" class="text-slate-400 hover:text-white text-sm font-semibold">Close</button>
+      </div>
+      <p id="mustChangeBanner" class="hidden text-xs text-amber-300 bg-amber-500/15 border border-amber-500/30 rounded-lg px-3 py-2">
+        Your account requires a password change before continuing.
+      </p>
+      <label class="block text-xs text-slate-400">
+        <span class="block mb-1 text-slate-300">Current Password</span>
+        <input id="currentPwdInput" type="password" autocomplete="current-password" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-xl px-3.5 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </label>
+      <label class="block text-xs text-slate-400">
+        <span class="block mb-1 text-slate-300">New Password (min 10 characters)</span>
+        <input id="newPwdInput" type="password" autocomplete="new-password" required class="w-full bg-slate-800 text-slate-100 text-sm rounded-xl px-3.5 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </label>
+      <div id="changePwdError" class="hidden rounded-xl px-3 py-2 text-xs font-medium bg-rose-500/15 text-rose-300 border border-rose-500/30"></div>
+      <button type="submit" class="w-full py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
+        Update Password
+      </button>
+    </form>
+  </div>
 
-    async function saveServerState() {
-      try {
-        const res = await fetch('/api/state', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ roomsMap, scheduleList, nextClassId })
-        });
-        if (res.status === 401) {
-          isAdminUnlocked = false;
-          updateAuthUI();
-          switchTab('admin');
-        }
-      } catch (err) {
-        console.error('Save error:', err);
-      }
-    }
-
-    async function checkAuthStatus() {
-      try {
-        const res = await fetch('/api/auth');
-        if (!res.ok) return;
-        const data = await res.json();
-        isAdminUnlocked = Boolean(data.authenticated);
-        updateAuthUI();
-      } catch (err) {}
-    }
-
-    function formatTime12h(hhmm) {
-      if (!hhmm || !hhmm.includes(':')) return hhmm || '';
-      const [hStr, mStr] = hhmm.split(':');
-      let h = parseInt(hStr, 10);
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      h = h % 12 || 12;
-      return `${h}:${mStr} ${ampm}`;
-    }
-
-    function normalizeTime(val) {
-      if (typeof val === 'number') {
-        const totalMinutes = Math.round(val * 24 * 60);
-        const h = String(Math.floor(totalMinutes / 60) % 24).padStart(2, '0');
-        const m = String(totalMinutes % 60).padStart(2, '0');
-        return `${h}:${m}`;
-      }
-      const str = String(val || '').trim().toUpperCase();
-      const match = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/);
-      if (!match) return '09:00';
-      let h = parseInt(match[1], 10);
-      const m = match[2];
-      const ampm = match[3];
-      if (ampm === 'PM' && h < 12) h += 12;
-      if (ampm === 'AM' && h === 12) h = 0;
-      return `${String(h).padStart(2, '0')}:${m}`;
-    }
-
-    function getActiveDayAndTime() {
-      if (useLiveClock) {
-        const now = new Date();
-        return {
-          day: DAYS_OF_WEEK[now.getDay()],
-          time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-        };
-      }
-      return {
-        day: document.getElementById('daySelect').value,
-        time: document.getElementById('timeSelect').value || '09:30'
-      };
-    }
-
-    function populateSelectors() {
-      const roomSelect = document.getElementById('roomSelect');
-      const adminRoomFilter = document.getElementById('adminRoomFilter');
-      const prevRoom = roomSelect.value || new URLSearchParams(window.location.search).get('room');
-      const prevAdminFilter = adminRoomFilter.value;
-
-      roomSelect.innerHTML = '';
-      adminRoomFilter.innerHTML = '<option value="ALL">All Rooms</option>';
-
-      Object.keys(roomsMap).sort().forEach(id => {
-        const shortName = roomsMap[id].name.replace(/^Room\s+\S+\s*—\s*/i, '');
-        const opt = document.createElement('option');
-        opt.value = id;
-        opt.textContent = `${id} — ${shortName}`;
-        roomSelect.appendChild(opt);
-        adminRoomFilter.appendChild(opt.cloneNode(true));
-      });
-
-      if (prevRoom && roomsMap[prevRoom]) roomSelect.value = prevRoom;
-      if (prevAdminFilter === 'ALL' || roomsMap[prevAdminFilter]) adminRoomFilter.value = prevAdminFilter || 'ALL';
-
-      const daySelect = document.getElementById('daySelect');
-      const prevDay = daySelect.value;
-      const days = [...new Set(scheduleList.map(s => s.day))];
-      daySelect.innerHTML = '';
-      days.forEach(d => {
-        const opt = document.createElement('option');
-        opt.value = d;
-        opt.textContent = d;
-        daySelect.appendChild(opt);
-      });
-      if (days.includes(prevDay)) daySelect.value = prevDay;
-
-      document.getElementById('datasetBadge').textContent = `${Object.keys(roomsMap).length} rooms · ${scheduleList.length} classes`;
-    }
-
-    function renderDisplay() {
-      const roomId = document.getElementById('roomSelect').value;
-      const { day, time } = getActiveDayAndTime();
-      const room = roomsMap[roomId];
-      if (!room) return;
-      const theme = AGE_THEMES[room.ageGroup] || AGE_THEMES.Adults;
-
-      document.getElementById('ageBanner').className = `px-6 sm:px-10 py-6 sm:py-8 flex flex-wrap items-center justify-between gap-4 transition-colors duration-300 ${theme.banner}`;
-      document.getElementById('ageBadge').textContent = theme.label;
-      document.getElementById('roomTitle').textContent = room.name;
-      document.getElementById('displayTime').textContent = formatTime12h(time);
-      document.getElementById('displayDay').textContent = day || '—';
-
-      const noteBanner = document.getElementById('roomNoteBanner');
-      if (room.note && room.note.trim()) {
-        document.getElementById('roomNoteText').textContent = room.note.trim();
-        noteBanner.classList.remove('hidden');
-      } else {
-        noteBanner.classList.add('hidden');
-      }
-
-      const dayClasses = scheduleList.filter(item => item.room === roomId && item.day === day).sort((a, b) => a.start.localeCompare(b.start));
-      const current = dayClasses.find(c => time >= c.start && time < c.end);
-      const next = dayClasses.find(c => c.start > time && !c.cancelled);
-
-      const statusText = document.getElementById('statusText');
-      const statusIndicator = document.getElementById('statusIndicator');
-      const cancelledPill = document.getElementById('cancelledPill');
-      const currentClassEl = document.getElementById('currentClass');
-
-      if (current && current.cancelled) {
-        statusText.textContent = 'Cancelled';
-        statusIndicator.className = 'w-2.5 h-2.5 rounded-full bg-rose-400';
-        cancelledPill.classList.remove('hidden');
-        currentClassEl.textContent = current.title;
-        currentClassEl.className = 'text-2xl sm:text-4xl font-bold text-rose-300 line-through mb-3';
-        document.getElementById('currentWindow').textContent = `${formatTime12h(current.start)} – ${formatTime12h(current.end)}`;
-        document.getElementById('currentLeader').textContent = current.leader || '—';
-      } else if (current) {
-        statusText.textContent = 'In Session';
-        statusIndicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse';
-        cancelledPill.classList.add('hidden');
-        currentClassEl.textContent = current.title;
-        currentClassEl.className = 'text-2xl sm:text-4xl font-bold text-white mb-3';
-        document.getElementById('currentWindow').textContent = `${formatTime12h(current.start)} – ${formatTime12h(current.end)}`;
-        document.getElementById('currentLeader').textContent = current.leader || '—';
-      } else {
-        statusText.textContent = 'Room Open';
-        statusIndicator.className = 'w-2.5 h-2.5 rounded-full bg-slate-300';
-        cancelledPill.classList.add('hidden');
-        currentClassEl.textContent = 'No Class Scheduled Right Now';
-        currentClassEl.className = 'text-2xl sm:text-4xl font-bold text-slate-300 mb-3';
-        document.getElementById('currentWindow').textContent = 'Open / Available';
-        document.getElementById('currentLeader').textContent = '—';
-      }
-
-      if (next) {
-        document.getElementById('nextClass').textContent = next.title;
-        document.getElementById('nextWindow').textContent = `${formatTime12h(next.start)} – ${formatTime12h(next.end)}`;
-      } else {
-        document.getElementById('nextClass').textContent = 'No more classes today';
-        document.getElementById('nextWindow').textContent = '';
-      }
-    }
-
-    function renderScheduleTable() {
-      const tbody = document.getElementById('scheduleTableBody');
-      tbody.innerHTML = '';
-      document.getElementById('tableCount').textContent = `${scheduleList.length} rows`;
-      scheduleList.forEach(item => {
-        const room = roomsMap[item.room] || { name: `Room ${item.room}`, ageGroup: 'Adults' };
-        const theme = AGE_THEMES[room.ageGroup] || AGE_THEMES.Adults;
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-800/40';
-        tr.innerHTML = `
-          <td class="px-4 py-3 font-medium text-white">${room.name}</td>
-          <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full text-xs font-semibold ${theme.badge}">${theme.label}</span></td>
-          <td class="px-4 py-3">${item.day}</td>
-          <td class="px-4 py-3 whitespace-nowrap">${formatTime12h(item.start)} – ${formatTime12h(item.end)}</td>
-          <td class="px-4 py-3 font-medium text-slate-100">${item.title}</td>
-          <td class="px-4 py-3">${item.leader || '—'}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function showAdminToast(msg) {
-      const el = document.getElementById('adminToast');
-      el.textContent = msg;
-      el.classList.remove('hidden');
-      setTimeout(() => el.classList.add('hidden'), 3000);
-    }
-
-    function renderAdminPanel() {
-      const query = (document.getElementById('adminSearch').value || '').trim().toLowerCase();
-      const grid = document.getElementById('adminRoomsGrid');
-      grid.innerHTML = '';
-
-      Object.keys(roomsMap).sort().forEach(id => {
-        const room = roomsMap[id];
-        if (query && !id.toLowerCase().includes(query) && !room.name.toLowerCase().includes(query)) return;
-        const theme = AGE_THEMES[room.ageGroup] || AGE_THEMES.Adults;
-        const ageOptions = Object.keys(AGE_THEMES).map(k => `<option value="${k}" ${room.ageGroup === k ? 'selected' : ''}>${AGE_THEMES[k].label}</option>`).join('');
-        const card = document.createElement('div');
-        card.className = 'rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4';
-        card.innerHTML = `
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5"><span class="w-3 h-3 rounded-full ${theme.banner}"></span><h4 class="font-bold text-white">${room.name}</h4></div>
-            <div class="flex items-center gap-2">
-              <button type="button" data-copy-link="${id}" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition">Copy iPad Link</button>
-              <button type="button" data-preview-room="${id}" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 transition">Preview iPad</button>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label class="block text-xs text-slate-400"><span class="block mb-1">Age Color Override</span><select data-age-room="${id}" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">${ageOptions}</select></label>
-            <label class="block text-xs text-slate-400"><span class="block mb-1">Door Notice (Optional)</span><input type="text" data-note-room="${id}" value="${(room.note || '').replace(/"/g, '&quot;')}" placeholder="e.g. Moved to Hall B" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" /></label>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-
-      const roomFilter = document.getElementById('adminRoomFilter').value;
-      const tbody = document.getElementById('adminClassesBody');
-      tbody.innerHTML = '';
-      scheduleList.filter(item => roomFilter === 'ALL' || item.room === roomFilter).forEach(item => {
-        const tr = document.createElement('tr');
-        tr.className = item.cancelled ? 'bg-rose-950/20' : 'hover:bg-slate-800/40';
-        tr.innerHTML = `
-          <td class="px-4 py-3 font-medium text-white whitespace-nowrap">Room ${item.room}</td>
-          <td class="px-4 py-3 whitespace-nowrap text-xs sm:text-sm"><div class="font-medium text-slate-200">${item.day}</div><div class="text-slate-400">${formatTime12h(item.start)} – ${formatTime12h(item.end)}</div></td>
-          <td class="px-4 py-3"><input type="text" data-edit-title="${item.id}" value="${item.title.replace(/"/g, '&quot;')}" class="w-full min-w-[160px] bg-slate-800/80 text-sm rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${item.cancelled ? 'line-through text-rose-300' : 'text-white'}" /></td>
-          <td class="px-4 py-3"><input type="text" data-edit-leader="${item.id}" value="${(item.leader || '').replace(/"/g, '&quot;')}" class="w-full min-w-[130px] bg-slate-800/80 text-slate-200 text-sm rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" /></td>
-          <td class="px-4 py-3 text-right whitespace-nowrap"><button type="button" data-toggle-cancel="${item.id}" class="px-3 py-1 rounded-lg text-xs font-semibold transition ${item.cancelled ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30' : 'bg-rose-600/20 text-rose-300 border border-rose-500/40 hover:bg-rose-600/30'}">${item.cancelled ? 'Restore' : 'Cancel'}</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function setKioskMode(enabled) {
-      if (enabled) switchTab('display');
-      document.getElementById('topHeader').classList.toggle('hidden', enabled);
-      document.getElementById('exitKioskBtn').classList.toggle('hidden', !enabled);
-    }
-
-    function setLiveClock(enabled) {
-      useLiveClock = enabled;
-      const btn = document.getElementById('liveClockBtn');
-      const daySelect = document.getElementById('daySelect');
-      const timeSelect = document.getElementById('timeSelect');
-      btn.textContent = enabled ? 'Live Clock: On' : 'Live Clock: Off';
-      btn.className = enabled ? 'px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition' : 'px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition';
-      daySelect.disabled = enabled;
-      timeSelect.disabled = enabled;
-      daySelect.classList.toggle('opacity-50', enabled);
-      timeSelect.classList.toggle('opacity-50', enabled);
-      renderDisplay();
-    }
-
-    function copyTextToClipboard(text) {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).catch(() => {});
-      } else {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        try { document.execCommand('copy'); } catch (e) {}
-        document.body.removeChild(ta);
-      }
-    }
-
-    function showUploadStatus(message, isError) {
-      const el = document.getElementById('uploadStatus');
-      el.textContent = message;
-      el.className = `rounded-xl px-4 py-3 text-sm font-medium ${isError ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'}`;
-      el.classList.remove('hidden');
-    }
-
-    function handleSpreadsheetFile(file) {
-      if (!file || typeof XLSX === 'undefined') return;
-      const reader = new FileReader();
-      reader.onload = async function (e) {
-        try {
-          const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-          const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '' });
-          if (!rows.length) { showUploadStatus('The uploaded spreadsheet appears to be empty.', true); return; }
-
-          const newRooms = {};
-          const newSchedule = [];
-          rows.forEach(row => {
-            const roomId = String(row.Room || row.room || '').trim();
-            if (!roomId) return;
-            const roomName = String(row.RoomName || row.roomName || `Room ${roomId}`).trim();
-            const rawAge = String(row.AgeGroup || row.ageGroup || 'Adults').trim();
-            const ageGroup = Object.keys(AGE_THEMES).find(k => k.toLowerCase() === rawAge.toLowerCase()) || 'Adults';
-            newRooms[roomId] = { name: roomName, ageGroup, note: '' };
-            newSchedule.push({
-              id: nextClassId++,
-              room: roomId,
-              day: String(row.Day || row.day || 'Sunday').trim(),
-              start: normalizeTime(row.StartTime || row.startTime || '09:00'),
-              end: normalizeTime(row.EndTime || row.endTime || '10:00'),
-              title: String(row.ClassTitle || row.classTitle || 'Scheduled Class').trim(),
-              leader: String(row.Leader || row.leader || '').trim(),
-              cancelled: false
-            });
-          });
-          if (!newSchedule.length) { showUploadStatus('No valid rows found. Make sure your file has a "Room" column.', true); return; }
-
-          roomsMap = newRooms;
-          scheduleList = newSchedule;
-          await saveServerState();
-          populateSelectors();
-          renderScheduleTable();
-          renderAdminPanel();
-          renderDisplay();
-          showUploadStatus(`Synced ${newSchedule.length} classes across ${Object.keys(newRooms).length} rooms to all iPads.`, false);
-        } catch (err) {
-          showUploadStatus(`Could not read "${file.name}": ${err.message}`, true);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function downloadSampleExcel() {
-      if (typeof XLSX === 'undefined') return;
-      const sampleRows = [
-        { Room: '101', RoomName: 'Room 101 — Chapel', AgeGroup: 'Adults', Day: 'Sunday', StartTime: '09:00', EndTime: '10:15', ClassTitle: 'Foundations of Faith', Leader: 'Pastor Mark Davis' },
-        { Room: '101', RoomName: 'Room 101 — Chapel', AgeGroup: 'Adults', Day: 'Wednesday', StartTime: '18:00', EndTime: '19:30', ClassTitle: 'Midweek Prayer & Study', Leader: 'Pastor Mark Davis' },
-        { Room: '102', RoomName: 'Room 102 — Youth Loft', AgeGroup: 'Teen', Day: 'Sunday', StartTime: '09:00', EndTime: '10:15', ClassTitle: 'High School Hangout', Leader: 'Tyler Brooks' },
-        { Room: '204', RoomName: 'Room 204 — College Lounge', AgeGroup: 'College', Day: 'Sunday', StartTime: '09:30', EndTime: '10:45', ClassTitle: 'College Coffee & Study', Leader: 'Alex Rivera' },
-        { Room: '105', RoomName: 'Room 105 — Kids Zone', AgeGroup: 'Kids', Day: 'Sunday', StartTime: '09:00', EndTime: '10:30', ClassTitle: 'Elementary Worship & Crafts', Leader: 'Emily Watson' }
-      ];
-      const ws = XLSX.utils.json_to_sheet(sampleRows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
-      XLSX.writeFile(wb, 'classroom_schedule_template.xlsx');
-    }
-
-    function exportCurrentExcel() {
-      if (typeof XLSX === 'undefined') return;
-      const rows = scheduleList.map(item => {
-        const room = roomsMap[item.room] || { name: `Room ${item.room}`, ageGroup: 'Adults' };
-        return { Room: item.room, RoomName: room.name, AgeGroup: room.ageGroup, Day: item.day, StartTime: item.start, EndTime: item.end, ClassTitle: item.title, Leader: item.leader, Cancelled: item.cancelled ? 'YES' : 'NO' };
-      });
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
-      XLSX.writeFile(wb, 'updated_classroom_schedule.xlsx');
-    }
-
-    function updateAuthUI() {
-      document.getElementById('logoutBtn').classList.toggle('hidden', !isAdminUnlocked);
-    }
-
-    function setTabClasses(tab) {
-      const activeCls = 'px-3 py-1 rounded-md text-xs sm:text-sm font-medium bg-indigo-600 text-white transition';
-      const idleCls = 'px-3 py-1 rounded-md text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition';
-      document.getElementById('tabDisplay').className = tab === 'display' ? activeCls : idleCls;
-      document.getElementById('tabUpload').className  = tab === 'upload'  ? activeCls : idleCls;
-      document.getElementById('tabAdmin').className   = tab === 'admin'   ? activeCls : idleCls;
-    }
-
-    function switchTab(tab) {
-      currentTab = tab;
-      if ((tab === 'upload' || tab === 'admin') && !isAdminUnlocked) {
-        pendingAdminTab = tab;
-        document.getElementById('viewDisplay').classList.add('hidden');
-        document.getElementById('viewUpload').classList.add('hidden');
-        document.getElementById('viewAdmin').classList.add('hidden');
-        document.getElementById('viewLogin').classList.remove('hidden');
-        document.getElementById('simulatorControls').classList.add('hidden');
-        document.getElementById('loginError').classList.add('hidden');
-        document.getElementById('adminPasswordInput').value = '';
-        setTabClasses(tab);
-        return;
-      }
-      document.getElementById('viewLogin').classList.add('hidden');
-      document.getElementById('viewDisplay').classList.toggle('hidden', tab !== 'display');
-      document.getElementById('viewUpload').classList.toggle('hidden', tab !== 'upload');
-      document.getElementById('viewAdmin').classList.toggle('hidden', tab !== 'admin');
-      document.getElementById('simulatorControls').classList.toggle('hidden', tab !== 'display');
-      setTabClasses(tab);
-      if (tab === 'admin') renderAdminPanel();
-    }
-
-    document.getElementById('tabDisplay').addEventListener('click', () => switchTab('display'));
-    document.getElementById('tabUpload').addEventListener('click', () => switchTab('upload'));
-    document.getElementById('tabAdmin').addEventListener('click', () => switchTab('admin'));
-
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const password = document.getElementById('adminPasswordInput').value;
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
-      });
-      if (res.ok) {
-        isAdminUnlocked = true;
-        updateAuthUI();
-        switchTab(pendingAdminTab || 'admin');
-      } else {
-        const err = document.getElementById('loginError');
-        err.textContent = 'Incorrect password.';
-        err.classList.remove('hidden');
-      }
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await fetch('/api/logout', { method: 'POST' });
-      isAdminUnlocked = false;
-      updateAuthUI();
-      switchTab('display');
-    });
-
-    document.getElementById('roomSelect').addEventListener('change', renderDisplay);
-    document.getElementById('daySelect').addEventListener('change', renderDisplay);
-    document.getElementById('timeSelect').addEventListener('input', renderDisplay);
-    document.getElementById('liveClockBtn').addEventListener('click', () => setLiveClock(!useLiveClock));
-    document.getElementById('kioskBtn').addEventListener('click', () => setKioskMode(true));
-    document.getElementById('exitKioskBtn').addEventListener('click', () => setKioskMode(false));
-    document.getElementById('downloadSampleBtn').addEventListener('click', downloadSampleExcel);
-    document.getElementById('exportExcelBtn').addEventListener('click', exportCurrentExcel);
-    document.getElementById('adminSearch').addEventListener('input', renderAdminPanel);
-    document.getElementById('adminRoomFilter').addEventListener('change', renderAdminPanel);
-
-    document.getElementById('adminRoomsGrid').addEventListener('change', (e) => {
-      const roomId = e.target.getAttribute('data-age-room');
-      if (roomId && roomsMap[roomId]) {
-        roomsMap[roomId].ageGroup = e.target.value;
-        saveServerState();
-        renderAdminPanel();
-        renderScheduleTable();
-        renderDisplay();
-      }
-    });
-
-    document.getElementById('adminRoomsGrid').addEventListener('input', (e) => {
-      const roomId = e.target.getAttribute('data-note-room');
-      if (roomId && roomsMap[roomId]) {
-        roomsMap[roomId].note = e.target.value;
-        saveServerState();
-        renderDisplay();
-      }
-    });
-
-    document.getElementById('adminRoomsGrid').addEventListener('click', (e) => {
-      const previewBtn = e.target.closest('[data-preview-room]');
-      if (previewBtn) {
-        document.getElementById('roomSelect').value = previewBtn.getAttribute('data-preview-room');
-        renderDisplay();
-        switchTab('display');
-        return;
-      }
-      const copyBtn = e.target.closest('[data-copy-link]');
-      if (copyBtn) {
-        const roomId = copyBtn.getAttribute('data-copy-link');
-        const base = window.location.href.split('?')[0];
-        copyTextToClipboard(`${base}?room=${encodeURIComponent(roomId)}&kiosk=1`);
-        showAdminToast(`Copied iPad kiosk link for Room ${roomId}: ?room=${roomId}&kiosk=1`);
-      }
-    });
-
-    document.getElementById('adminClassesBody').addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-toggle-cancel]');
-      if (!btn) return;
-      const item = scheduleList.find(c => c.id === Number(btn.getAttribute('data-toggle-cancel')));
-      if (item) {
-        item.cancelled = !item.cancelled;
-        saveServerState();
-        renderAdminPanel();
-        renderDisplay();
-      }
-    });
-
-    document.getElementById('adminClassesBody').addEventListener('input', (e) => {
-      const titleId = e.target.getAttribute('data-edit-title');
-      if (titleId) {
-        const item = scheduleList.find(c => c.id === Number(titleId));
-        if (item) { item.title = e.target.value; saveServerState(); renderScheduleTable(); renderDisplay(); }
-      }
-      const leaderId = e.target.getAttribute('data-edit-leader');
-      if (leaderId) {
-        const item = scheduleList.find(c => c.id === Number(leaderId));
-        if (item) { item.leader = e.target.value; saveServerState(); renderScheduleTable(); renderDisplay(); }
-      }
-    });
-
-    document.getElementById('fileInput').addEventListener('change', (e) => { handleSpreadsheetFile(e.target.files[0]); e.target.value = ''; });
-    const dropZone = document.getElementById('dropZone');
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-indigo-500'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-indigo-500'));
-    dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('border-indigo-500'); handleSpreadsheetFile(e.dataTransfer.files[0]); });
-
-    (async function init() {
-      await Promise.all([checkAuthStatus(), fetchServerState()]);
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('kiosk') === '1') {
-        setLiveClock(true);
-        setKioskMode(true);
-      }
-      // Poll server every 15 seconds so all 30+ iPads stay in sync
-      setInterval(() => {
-        if (currentTab === 'display') fetchServerState();
-      }, 15000);
-    })();
-  </script>
+  <script src="/assets/app.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,16 @@
+{
+  "name": "LBC Classroom Door Display",
+  "short_name": "LBC Signs",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#1e293b",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "/assets/LBC-logo.png",
+      "sizes": "440x151",
+      "type": "image/png"
+    }
+  ]
+}
