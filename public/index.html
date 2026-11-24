@@ -199,14 +199,18 @@
           <p class="text-sm text-slate-400 mt-1">Override room age colors, copy direct iPad kiosk links, or cancel &amp; edit individual classes.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-          <input id="adminSearch" type="search" placeholder="Filter rooms (e.g. 101, Youth)..." class="flex-1 sm:w-56 bg-slate-800 text-slate-100 text-sm rounded-xl px-3.5 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <span id="adminSaveStatus" class="hidden inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border"></span>
+          <input id="adminSearch" type="search" placeholder="Filter rooms (e.g. 101, WC 101)..." class="flex-1 sm:w-56 bg-slate-800 text-slate-100 text-sm rounded-xl px-3.5 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           <button id="exportExcelBtn" type="button" class="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition">
             Export .xlsx
           </button>
         </div>
       </div>
 
-      <div id="adminToast" class="hidden rounded-xl px-4 py-2.5 text-sm font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"></div>
+      <div id="adminToast" class="hidden rounded-xl px-4 py-2.5 text-sm font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center justify-between gap-3">
+        <span id="adminToastText"></span>
+        <button id="adminUndoBtn" type="button" class="hidden px-2.5 py-1 rounded-lg text-xs font-bold bg-white/10 hover:bg-white/20 text-white transition">Undo</button>
+      </div>
 
       <div class="space-y-3">
         <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Rooms — Age Color Overrides, Door Notices &amp; iPad Links</h3>
@@ -217,7 +221,7 @@
         <div class="px-6 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 class="text-base font-semibold text-white">Scheduled Classes — Cancellations &amp; Edits</h3>
-            <p class="text-xs text-slate-400">Click Cancel to immediately flag a class on its room's iPad screen.</p>
+            <p class="text-xs text-slate-400">Edits save automatically with conflict checks. Click Cancel to immediately flag a class on its room's iPad screen.</p>
           </div>
           <label class="flex items-center gap-2 text-xs text-slate-400">
             <span>Filter Room</span>
@@ -229,6 +233,7 @@
             <thead class="bg-slate-800/60 text-xs uppercase text-slate-400">
               <tr>
                 <th class="px-4 py-3">Room</th>
+                <th class="px-4 py-3">Age Group</th>
                 <th class="px-4 py-3">Day &amp; Time</th>
                 <th class="px-4 py-3">Class Title</th>
                 <th class="px-4 py-3">Leader</th>
@@ -244,55 +249,200 @@
 
   <script>
     const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const AGE_THEMES = {
-      Adults:  { banner: 'bg-indigo-700',  badge: 'bg-indigo-500/20 text-indigo-300', label: 'Adults' },
-      College: { banner: 'bg-teal-700',    badge: 'bg-teal-500/20 text-teal-300',     label: 'College' },
-      Teen:    { banner: 'bg-amber-600',   badge: 'bg-amber-500/20 text-amber-300',   label: 'Teen' },
-      Kids:    { banner: 'bg-sky-600',     badge: 'bg-sky-500/20 text-sky-300',       label: 'Kids' },
-      Special: { banner: 'bg-purple-700',  badge: 'bg-purple-500/20 text-purple-300', label: 'Special Event' },
-	  Seniors: { banner: 'bg-emerald-700', badge: 'bg-emerald-500/20 text-emerald-300', label: 'Seniors' }
+    const FALLBACK_THEME = {
+      id: 'default',
+      label: 'Room',
+      bannerBg: '#334155',
+      bannerText: '#ffffff',
+      badgeBg: 'rgba(148, 163, 184, 0.2)',
+      badgeText: '#e2e8f0'
     };
 
+    let ageGroups = [];
+    let ageGroupsMap = {};
+    let roomsList = [];
     let roomsMap = {};
     let scheduleList = [];
-    let nextClassId = 13;
+    let appSettings = { theme: 'dark', timezone: 'America/Chicago' };
+    let lastStateEtag = null;
+    let knownBuildId = null;
+
     let useLiveClock = false;
-    let liveClockTimer = null;
     let isAdminUnlocked = false;
     let pendingAdminTab = 'admin';
     let currentTab = 'display';
 
-    async function fetchServerState() {
+    let toastTimer = null;
+    let activeUndoAction = null;
+    const debounceTimers = new Map();
+
+    function escapeHtml(val) {
+      return String(val ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getTheme(ageGroupId) {
+      if (ageGroupId && ageGroupsMap[ageGroupId]) return ageGroupsMap[ageGroupId];
+      const def = ageGroups.find(ag => ag.isDefault);
+      return def || ageGroups[0] || FALLBACK_THEME;
+    }
+
+    function resolveAgeGroupIdByName(rawName) {
+      const needle = String(rawName || '').trim().toLowerCase();
+      if (!needle) return (ageGroups.find(ag => ag.isDefault) || ageGroups[0] || FALLBACK_THEME).id;
+      const direct = ageGroups.find(ag => ag.id.toLowerCase() === needle || ag.label.toLowerCase() === needle);
+      if (direct) return direct.id;
+      const aliased = ageGroups.find(ag => (ag.aliases || []).some(a => String(a).trim().toLowerCase() === needle));
+      if (aliased) return aliased.id;
+      return (ageGroups.find(ag => ag.isDefault) || ageGroups[0] || FALLBACK_THEME).id;
+    }
+
+    function setSaveStatus(state, text) {
+      const el = document.getElementById('adminSaveStatus');
+      if (!el) return;
+      if (!state) {
+        el.classList.add('hidden');
+        return;
+      }
+      el.textContent = text;
+      el.classList.remove('hidden');
+      if (state === 'saving') {
+        el.className = 'inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-amber-500/15 text-amber-300 border-amber-500/30';
+      } else if (state === 'saved') {
+        el.className = 'inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+      } else {
+        el.className = 'inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-rose-500/15 text-rose-300 border-rose-500/30';
+      }
+    }
+
+    function applyStatePayload(data) {
+      if (knownBuildId && data.buildId && data.buildId !== knownBuildId) {
+        window.location.reload();
+        return;
+      }
+      if (data.buildId) knownBuildId = data.buildId;
+      appSettings = data.settings || appSettings;
+      ageGroups = data.ageGroups || [];
+      ageGroupsMap = data.ageGroupsMap || {};
+      roomsList = data.rooms || [];
+      roomsMap = data.roomsMap || {};
+      scheduleList = data.scheduleList || [];
+      populateSelectors();
+      renderScheduleTable();
+      if (currentTab === 'admin') renderAdminPanel();
+      renderDisplay();
+    }
+
+    async function fetchServerState(force = false) {
       try {
-        const res = await fetch('/api/state');
+        const headers = {};
+        if (!force && lastStateEtag) headers['If-None-Match'] = lastStateEtag;
+        const res = await fetch('/api/state', { headers });
+        if (res.status === 304) return;
         if (!res.ok) return;
+        const etag = res.headers.get('ETag');
+        if (etag) lastStateEtag = etag;
         const data = await res.json();
-        roomsMap = data.roomsMap || {};
-        scheduleList = data.scheduleList || [];
-        nextClassId = data.nextClassId || (scheduleList.length + 1);
-        populateSelectors();
-        renderScheduleTable();
-        if (currentTab === 'admin') renderAdminPanel();
-        renderDisplay();
+        applyStatePayload(data);
       } catch (err) {
         console.error('Sync error:', err);
       }
     }
 
-    async function saveServerState() {
+    function handleAuthExpired() {
+      isAdminUnlocked = false;
+      updateAuthUI();
+      switchTab('admin');
+    }
+
+    async function patchRoom(roomId, changes) {
+      const room = roomsMap[roomId];
+      if (!room) return null;
+      setSaveStatus('saving', 'Saving...');
       try {
-        const res = await fetch('/api/state', {
-          method: 'POST',
+        const res = await fetch(`/api/rooms/${encodeURIComponent(roomId)}`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ roomsMap, scheduleList, nextClassId })
+          body: JSON.stringify({ ...changes, version: room.version })
         });
-        if (res.status === 401) {
-          isAdminUnlocked = false;
-          updateAuthUI();
-          switchTab('admin');
+        if (res.status === 401) { handleAuthExpired(); return null; }
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 409) {
+          setSaveStatus('error', 'Conflict — refreshed');
+          showAdminToast(data.error || 'Room changed in another tab; refreshed latest data.', { isError: true });
+          await fetchServerState(true);
+          return null;
         }
+        if (!res.ok) {
+          setSaveStatus('error', 'Save failed');
+          showAdminToast(data.error || 'Could not save room changes.', { isError: true });
+          return null;
+        }
+        roomsMap[roomId] = data.room;
+        const idx = roomsList.findIndex(r => r.id === roomId);
+        if (idx >= 0) roomsList[idx] = data.room;
+        lastStateEtag = null;
+        setSaveStatus('saved', 'Saved');
+        return data.room;
       } catch (err) {
-        console.error('Save error:', err);
+        console.error('Room save error:', err);
+        setSaveStatus('error', 'Network error');
+        return null;
+      }
+    }
+
+    async function patchClass(classId, changes) {
+      const item = scheduleList.find(c => c.id === classId);
+      if (!item) return null;
+      setSaveStatus('saving', 'Saving...');
+      try {
+        const res = await fetch(`/api/classes/${classId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...changes, version: item.version })
+        });
+        if (res.status === 401) { handleAuthExpired(); return null; }
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 409) {
+          setSaveStatus('error', data.code === 'SCHEDULE_OVERLAP' ? 'Time overlap' : 'Conflict — refreshed');
+          showAdminToast(data.error || 'Class changed in another tab; refreshed latest data.', { isError: true });
+          await fetchServerState(true);
+          return null;
+        }
+        if (!res.ok) {
+          setSaveStatus('error', 'Save failed');
+          showAdminToast(data.error || 'Could not save class changes.', { isError: true });
+          return null;
+        }
+        const idx = scheduleList.findIndex(c => c.id === classId);
+        if (idx >= 0) scheduleList[idx] = data.class;
+        lastStateEtag = null;
+        setSaveStatus('saved', 'Saved');
+        return data.class;
+      } catch (err) {
+        console.error('Class save error:', err);
+        setSaveStatus('error', 'Network error');
+        return null;
+      }
+    }
+
+    function scheduleDebounced(key, fn, delayMs = 450) {
+      if (debounceTimers.has(key)) clearTimeout(debounceTimers.get(key));
+      debounceTimers.set(key, setTimeout(() => {
+        debounceTimers.delete(key);
+        fn();
+      }, delayMs));
+    }
+
+    function flushDebounced(key, fn) {
+      if (debounceTimers.has(key)) {
+        clearTimeout(debounceTimers.get(key));
+        debounceTimers.delete(key);
+        fn();
       }
     }
 
@@ -354,25 +504,27 @@
       const prevAdminFilter = adminRoomFilter.value;
 
       roomSelect.innerHTML = '';
-      adminRoomFilter.innerHTML = '<option value="ALL">All Rooms</option>';
+      adminRoomFilter.innerHTML = '<option value="ALL">All Rooms</option><option value="UNASSIGNED">Unassigned Classes</option>';
 
-      Object.keys(roomsMap).sort().forEach(id => {
-        const shortName = roomsMap[id].name.replace(/^Room\s+\S+\s*—\s*/i, '');
+      roomsList.forEach(room => {
+        const shortName = room.name.replace(/^Room\s+\S+\s*—\s*/i, '');
         const opt = document.createElement('option');
-        opt.value = id;
-        opt.textContent = `${id} — ${shortName}`;
+        opt.value = room.id;
+        opt.textContent = shortName === room.name ? room.name : `${room.id} — ${shortName}`;
         roomSelect.appendChild(opt);
         adminRoomFilter.appendChild(opt.cloneNode(true));
       });
 
       if (prevRoom && roomsMap[prevRoom]) roomSelect.value = prevRoom;
-      if (prevAdminFilter === 'ALL' || roomsMap[prevAdminFilter]) adminRoomFilter.value = prevAdminFilter || 'ALL';
+      if (prevAdminFilter === 'ALL' || prevAdminFilter === 'UNASSIGNED' || roomsMap[prevAdminFilter]) {
+        adminRoomFilter.value = prevAdminFilter || 'ALL';
+      }
 
       const daySelect = document.getElementById('daySelect');
       const prevDay = daySelect.value;
       const days = [...new Set(scheduleList.map(s => s.day))];
       daySelect.innerHTML = '';
-      days.forEach(d => {
+      (days.length ? days : ['Sunday']).forEach(d => {
         const opt = document.createElement('option');
         opt.value = d;
         opt.textContent = d;
@@ -380,7 +532,7 @@
       });
       if (days.includes(prevDay)) daySelect.value = prevDay;
 
-      document.getElementById('datasetBadge').textContent = `${Object.keys(roomsMap).length} rooms · ${scheduleList.length} classes`;
+      document.getElementById('datasetBadge').textContent = `${roomsList.length} rooms · ${scheduleList.length} classes`;
     }
 
     function renderDisplay() {
@@ -388,9 +540,30 @@
       const { day, time } = getActiveDayAndTime();
       const room = roomsMap[roomId];
       if (!room) return;
-      const theme = AGE_THEMES[room.ageGroup] || AGE_THEMES.Adults;
 
-      document.getElementById('ageBanner').className = `px-6 sm:px-10 py-6 sm:py-8 flex flex-wrap items-center justify-between gap-4 transition-colors duration-300 ${theme.banner}`;
+      const dayClasses = scheduleList
+        .filter(item => item.room === roomId && item.day === day)
+        .sort((a, b) => a.start.localeCompare(b.start));
+
+      // Prefer an active class over a cancelled one if they ever overlap
+      const matchingNow = dayClasses.filter(c => time >= c.start && time < c.end);
+      const current = matchingNow.find(c => !c.cancelled) || matchingNow[0] || null;
+      const next = dayClasses.find(c => c.start > time && !c.cancelled) || null;
+
+      // Color precedence: Room Manual Override -> Active/Next Class Age Group -> Room Default -> Neutral
+      const effectiveAgeId =
+        room.overrideAgeGroupId ||
+        (current && current.ageGroupId) ||
+        (next && next.ageGroupId) ||
+        room.defaultAgeGroupId ||
+        null;
+      const theme = effectiveAgeId ? getTheme(effectiveAgeId) : FALLBACK_THEME;
+
+      const bannerEl = document.getElementById('ageBanner');
+      bannerEl.className = 'px-6 sm:px-10 py-6 sm:py-8 flex flex-wrap items-center justify-between gap-4 transition-colors duration-300';
+      bannerEl.style.backgroundColor = theme.bannerBg;
+      bannerEl.style.color = theme.bannerText;
+
       document.getElementById('ageBadge').textContent = theme.label;
       document.getElementById('roomTitle').textContent = room.name;
       document.getElementById('displayTime').textContent = formatTime12h(time);
@@ -403,10 +576,6 @@
       } else {
         noteBanner.classList.add('hidden');
       }
-
-      const dayClasses = scheduleList.filter(item => item.room === roomId && item.day === day).sort((a, b) => a.start.localeCompare(b.start));
-      const current = dayClasses.find(c => time >= c.start && time < c.end);
-      const next = dayClasses.find(c => c.start > time && !c.cancelled);
 
       const statusText = document.getElementById('statusText');
       const statusIndicator = document.getElementById('statusIndicator');
@@ -453,27 +622,40 @@
       tbody.innerHTML = '';
       document.getElementById('tableCount').textContent = `${scheduleList.length} rows`;
       scheduleList.forEach(item => {
-        const room = roomsMap[item.room] || { name: `Room ${item.room}`, ageGroup: 'Adults' };
-        const theme = AGE_THEMES[room.ageGroup] || AGE_THEMES.Adults;
+        const room = item.room ? (roomsMap[item.room] || { name: `Room ${item.room}` }) : { name: 'Unassigned' };
+        const theme = getTheme(item.ageGroupId);
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-800/40';
         tr.innerHTML = `
-          <td class="px-4 py-3 font-medium text-white">${room.name}</td>
-          <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full text-xs font-semibold ${theme.badge}">${theme.label}</span></td>
-          <td class="px-4 py-3">${item.day}</td>
-          <td class="px-4 py-3 whitespace-nowrap">${formatTime12h(item.start)} – ${formatTime12h(item.end)}</td>
-          <td class="px-4 py-3 font-medium text-slate-100">${item.title}</td>
-          <td class="px-4 py-3">${item.leader || '—'}</td>
+          <td class="px-4 py-3 font-medium text-white">${escapeHtml(room.name)}</td>
+          <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background-color:${escapeHtml(theme.badgeBg)};color:${escapeHtml(theme.badgeText)}">${escapeHtml(theme.label)}</span></td>
+          <td class="px-4 py-3">${escapeHtml(item.day)}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${escapeHtml(formatTime12h(item.start))} – ${escapeHtml(formatTime12h(item.end))}</td>
+          <td class="px-4 py-3 font-medium text-slate-100">${escapeHtml(item.title)}</td>
+          <td class="px-4 py-3">${escapeHtml(item.leader || '—')}</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    function showAdminToast(msg) {
+    function showAdminToast(msg, opts = {}) {
       const el = document.getElementById('adminToast');
-      el.textContent = msg;
+      const textEl = document.getElementById('adminToastText');
+      const undoBtn = document.getElementById('adminUndoBtn');
+      textEl.textContent = msg;
+      activeUndoAction = opts.onUndo || null;
+      undoBtn.classList.toggle('hidden', !activeUndoAction);
+
+      el.className = opts.isError
+        ? 'rounded-xl px-4 py-2.5 text-sm font-medium bg-rose-500/15 text-rose-300 border border-rose-500/30 flex items-center justify-between gap-3'
+        : 'rounded-xl px-4 py-2.5 text-sm font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center justify-between gap-3';
       el.classList.remove('hidden');
-      setTimeout(() => el.classList.add('hidden'), 3000);
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        el.classList.add('hidden');
+        activeUndoAction = null;
+      }, opts.onUndo ? 8000 : 3500);
     }
 
     function renderAdminPanel() {
@@ -481,24 +663,27 @@
       const grid = document.getElementById('adminRoomsGrid');
       grid.innerHTML = '';
 
-      Object.keys(roomsMap).sort().forEach(id => {
-        const room = roomsMap[id];
+      roomsList.forEach(room => {
+        const id = room.id;
         if (query && !id.toLowerCase().includes(query) && !room.name.toLowerCase().includes(query)) return;
-        const theme = AGE_THEMES[room.ageGroup] || AGE_THEMES.Adults;
-        const ageOptions = Object.keys(AGE_THEMES).map(k => `<option value="${k}" ${room.ageGroup === k ? 'selected' : ''}>${AGE_THEMES[k].label}</option>`).join('');
+        const displayTheme = getTheme(room.overrideAgeGroupId || room.defaultAgeGroupId);
+        const ageOptions = [
+          `<option value="" ${!room.overrideAgeGroupId ? 'selected' : ''}>Auto (Use Active Class Age Group)</option>`,
+          ...ageGroups.map(ag => `<option value="${escapeHtml(ag.id)}" ${room.overrideAgeGroupId === ag.id ? 'selected' : ''}>Override: ${escapeHtml(ag.label)}</option>`)
+        ].join('');
         const card = document.createElement('div');
         card.className = 'rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4';
         card.innerHTML = `
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5"><span class="w-3 h-3 rounded-full ${theme.banner}"></span><h4 class="font-bold text-white">${room.name}</h4></div>
+            <div class="flex items-center gap-2.5"><span class="w-3 h-3 rounded-full" style="background-color:${escapeHtml(displayTheme.bannerBg)}"></span><h4 class="font-bold text-white">${escapeHtml(room.name)}</h4></div>
             <div class="flex items-center gap-2">
-              <button type="button" data-copy-link="${id}" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition">Copy iPad Link</button>
-              <button type="button" data-preview-room="${id}" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 transition">Preview iPad</button>
+              <button type="button" data-copy-link="${escapeHtml(id)}" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition">Copy iPad Link</button>
+              <button type="button" data-preview-room="${escapeHtml(id)}" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 transition">Preview iPad</button>
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label class="block text-xs text-slate-400"><span class="block mb-1">Age Color Override</span><select data-age-room="${id}" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">${ageOptions}</select></label>
-            <label class="block text-xs text-slate-400"><span class="block mb-1">Door Notice (Optional)</span><input type="text" data-note-room="${id}" value="${(room.note || '').replace(/"/g, '&quot;')}" placeholder="e.g. Moved to Hall B" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" /></label>
+            <label class="block text-xs text-slate-400"><span class="block mb-1">Age Color Override</span><select data-age-room="${escapeHtml(id)}" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">${ageOptions}</select></label>
+            <label class="block text-xs text-slate-400"><span class="block mb-1">Door Notice (Optional)</span><input type="text" data-note-room="${escapeHtml(id)}" value="${escapeHtml(room.note || '')}" placeholder="e.g. Moved to Hall B" class="w-full bg-slate-800 text-slate-100 text-sm rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" /></label>
           </div>
         `;
         grid.appendChild(card);
@@ -507,18 +692,28 @@
       const roomFilter = document.getElementById('adminRoomFilter').value;
       const tbody = document.getElementById('adminClassesBody');
       tbody.innerHTML = '';
-      scheduleList.filter(item => roomFilter === 'ALL' || item.room === roomFilter).forEach(item => {
-        const tr = document.createElement('tr');
-        tr.className = item.cancelled ? 'bg-rose-950/20' : 'hover:bg-slate-800/40';
-        tr.innerHTML = `
-          <td class="px-4 py-3 font-medium text-white whitespace-nowrap">Room ${item.room}</td>
-          <td class="px-4 py-3 whitespace-nowrap text-xs sm:text-sm"><div class="font-medium text-slate-200">${item.day}</div><div class="text-slate-400">${formatTime12h(item.start)} – ${formatTime12h(item.end)}</div></td>
-          <td class="px-4 py-3"><input type="text" data-edit-title="${item.id}" value="${item.title.replace(/"/g, '&quot;')}" class="w-full min-w-[160px] bg-slate-800/80 text-sm rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${item.cancelled ? 'line-through text-rose-300' : 'text-white'}" /></td>
-          <td class="px-4 py-3"><input type="text" data-edit-leader="${item.id}" value="${(item.leader || '').replace(/"/g, '&quot;')}" class="w-full min-w-[130px] bg-slate-800/80 text-slate-200 text-sm rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" /></td>
-          <td class="px-4 py-3 text-right whitespace-nowrap"><button type="button" data-toggle-cancel="${item.id}" class="px-3 py-1 rounded-lg text-xs font-semibold transition ${item.cancelled ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30' : 'bg-rose-600/20 text-rose-300 border border-rose-500/40 hover:bg-rose-600/30'}">${item.cancelled ? 'Restore' : 'Cancel'}</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
+      scheduleList
+        .filter(item => {
+          if (roomFilter === 'ALL') return true;
+          if (roomFilter === 'UNASSIGNED') return !item.room;
+          return item.room === roomFilter;
+        })
+        .forEach(item => {
+          const classAgeOptions = ageGroups
+            .map(ag => `<option value="${escapeHtml(ag.id)}" ${item.ageGroupId === ag.id ? 'selected' : ''}>${escapeHtml(ag.label)}</option>`)
+            .join('');
+          const tr = document.createElement('tr');
+          tr.className = item.cancelled ? 'bg-rose-950/20' : 'hover:bg-slate-800/40';
+          tr.innerHTML = `
+            <td class="px-4 py-3 font-medium text-white whitespace-nowrap">${escapeHtml(item.room ? `Room ${item.room}` : 'Unassigned')}</td>
+            <td class="px-4 py-3 whitespace-nowrap"><select data-edit-age="${item.id}" class="bg-slate-800/80 text-slate-100 text-xs rounded-lg px-2 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">${classAgeOptions}</select></td>
+            <td class="px-4 py-3 whitespace-nowrap text-xs sm:text-sm"><div class="font-medium text-slate-200">${escapeHtml(item.day)}</div><div class="text-slate-400">${escapeHtml(formatTime12h(item.start))} – ${escapeHtml(formatTime12h(item.end))}</div></td>
+            <td class="px-4 py-3"><input type="text" data-edit-title="${item.id}" value="${escapeHtml(item.title)}" class="w-full min-w-[160px] bg-slate-800/80 text-sm rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${item.cancelled ? 'line-through text-rose-300' : 'text-white'}" /></td>
+            <td class="px-4 py-3"><input type="text" data-edit-leader="${item.id}" value="${escapeHtml(item.leader || '')}" class="w-full min-w-[130px] bg-slate-800/80 text-slate-200 text-sm rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" /></td>
+            <td class="px-4 py-3 text-right whitespace-nowrap"><button type="button" data-toggle-cancel="${item.id}" class="px-3 py-1 rounded-lg text-xs font-semibold transition ${item.cancelled ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30' : 'bg-rose-600/20 text-rose-300 border border-rose-500/40 hover:bg-rose-600/30'}">${item.cancelled ? 'Restore' : 'Cancel'}</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
     }
 
     function setKioskMode(enabled) {
@@ -563,6 +758,11 @@
       el.classList.remove('hidden');
     }
 
+    function parseCancelledFlag(rawVal) {
+      const s = String(rawVal || '').trim().toLowerCase();
+      return s === 'yes' || s === 'true' || s === '1' || s === 'y';
+    }
+
     function handleSpreadsheetFile(file) {
       if (!file || typeof XLSX === 'undefined') return;
       const reader = new FileReader();
@@ -579,29 +779,38 @@
             if (!roomId) return;
             const roomName = String(row.RoomName || row.roomName || `Room ${roomId}`).trim();
             const rawAge = String(row.AgeGroup || row.ageGroup || 'Adults').trim();
-            const ageGroup = Object.keys(AGE_THEMES).find(k => k.toLowerCase() === rawAge.toLowerCase()) || 'Adults';
-            newRooms[roomId] = { name: roomName, ageGroup, note: '' };
+            const ageGroupId = resolveAgeGroupIdByName(rawAge);
+            if (!newRooms[roomId]) {
+              newRooms[roomId] = { name: roomName, defaultAgeGroupId: ageGroupId, note: '' };
+            }
             newSchedule.push({
-              id: nextClassId++,
               room: roomId,
+              ageGroupId,
               day: String(row.Day || row.day || 'Sunday').trim(),
               start: normalizeTime(row.StartTime || row.startTime || '09:00'),
               end: normalizeTime(row.EndTime || row.endTime || '10:00'),
               title: String(row.ClassTitle || row.classTitle || 'Scheduled Class').trim(),
               leader: String(row.Leader || row.leader || '').trim(),
-              cancelled: false
+              cancelled: parseCancelledFlag(row.Cancelled || row.cancelled)
             });
           });
           if (!newSchedule.length) { showUploadStatus('No valid rows found. Make sure your file has a "Room" column.', true); return; }
 
-          roomsMap = newRooms;
-          scheduleList = newSchedule;
-          await saveServerState();
-          populateSelectors();
-          renderScheduleTable();
-          renderAdminPanel();
-          renderDisplay();
-          showUploadStatus(`Synced ${newSchedule.length} classes across ${Object.keys(newRooms).length} rooms to all iPads.`, false);
+          const res = await fetch('/api/schedule/replace', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomsMap: newRooms, scheduleList: newSchedule, preserveRoomOverrides: true })
+          });
+          if (res.status === 401) { handleAuthExpired(); return; }
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            showUploadStatus(data.error || 'Upload rejected by server.', true);
+            return;
+          }
+          lastStateEtag = null;
+          if (data.state) applyStatePayload(data.state);
+          else await fetchServerState(true);
+          showUploadStatus(`Synced ${newSchedule.length} classes across ${Object.keys(newRooms).length} rooms to SQLite and all iPads (existing room notices/overrides preserved).`, false);
         } catch (err) {
           showUploadStatus(`Could not read "${file.name}": ${err.message}`, true);
         }
@@ -612,11 +821,11 @@
     function downloadSampleExcel() {
       if (typeof XLSX === 'undefined') return;
       const sampleRows = [
-        { Room: '101', RoomName: 'Room 101 — Chapel', AgeGroup: 'Adults', Day: 'Sunday', StartTime: '09:00', EndTime: '10:15', ClassTitle: 'Foundations of Faith', Leader: 'Pastor Mark Davis' },
-        { Room: '101', RoomName: 'Room 101 — Chapel', AgeGroup: 'Adults', Day: 'Wednesday', StartTime: '18:00', EndTime: '19:30', ClassTitle: 'Midweek Prayer & Study', Leader: 'Pastor Mark Davis' },
-        { Room: '102', RoomName: 'Room 102 — Youth Loft', AgeGroup: 'Teen', Day: 'Sunday', StartTime: '09:00', EndTime: '10:15', ClassTitle: 'High School Hangout', Leader: 'Tyler Brooks' },
-        { Room: '204', RoomName: 'Room 204 — College Lounge', AgeGroup: 'College', Day: 'Sunday', StartTime: '09:30', EndTime: '10:45', ClassTitle: 'College Coffee & Study', Leader: 'Alex Rivera' },
-        { Room: '105', RoomName: 'Room 105 — Kids Zone', AgeGroup: 'Kids', Day: 'Sunday', StartTime: '09:00', EndTime: '10:30', ClassTitle: 'Elementary Worship & Crafts', Leader: 'Emily Watson' }
+        { Room: '101', RoomName: 'Room 101 — Chapel', AgeGroup: 'Adults', Day: 'Sunday', StartTime: '09:00', EndTime: '10:15', ClassTitle: 'Foundations of Faith', Leader: 'Pastor Mark Davis', Cancelled: 'NO' },
+        { Room: '101', RoomName: 'Room 101 — Chapel', AgeGroup: 'Adults', Day: 'Wednesday', StartTime: '18:00', EndTime: '19:30', ClassTitle: 'Midweek Prayer & Study', Leader: 'Pastor Mark Davis', Cancelled: 'NO' },
+        { Room: '102', RoomName: 'Room 102 — Youth Loft', AgeGroup: 'Teen', Day: 'Sunday', StartTime: '09:00', EndTime: '10:15', ClassTitle: 'High School Hangout', Leader: 'Tyler Brooks', Cancelled: 'NO' },
+        { Room: '204', RoomName: 'Room 204 — College Lounge', AgeGroup: 'College', Day: 'Sunday', StartTime: '09:30', EndTime: '10:45', ClassTitle: 'College Coffee & Study', Leader: 'Alex Rivera', Cancelled: 'NO' },
+        { Room: '105', RoomName: 'Room 105 — Kids Zone', AgeGroup: 'Kids', Day: 'Sunday', StartTime: '09:00', EndTime: '10:30', ClassTitle: 'Elementary Worship & Crafts', Leader: 'Emily Watson', Cancelled: 'NO' }
       ];
       const ws = XLSX.utils.json_to_sheet(sampleRows);
       const wb = XLSX.utils.book_new();
@@ -627,8 +836,19 @@
     function exportCurrentExcel() {
       if (typeof XLSX === 'undefined') return;
       const rows = scheduleList.map(item => {
-        const room = roomsMap[item.room] || { name: `Room ${item.room}`, ageGroup: 'Adults' };
-        return { Room: item.room, RoomName: room.name, AgeGroup: room.ageGroup, Day: item.day, StartTime: item.start, EndTime: item.end, ClassTitle: item.title, Leader: item.leader, Cancelled: item.cancelled ? 'YES' : 'NO' };
+        const room = item.room ? (roomsMap[item.room] || { name: `Room ${item.room}` }) : { name: 'Unassigned' };
+        const ag = getTheme(item.ageGroupId);
+        return {
+          Room: item.room || '',
+          RoomName: room.name,
+          AgeGroup: ag.label,
+          Day: item.day,
+          StartTime: item.start,
+          EndTime: item.end,
+          ClassTitle: item.title,
+          Leader: item.leader,
+          Cancelled: item.cancelled ? 'YES' : 'NO'
+        };
       });
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
@@ -701,6 +921,14 @@
       switchTab('display');
     });
 
+    document.getElementById('adminUndoBtn').addEventListener('click', async () => {
+      if (!activeUndoAction) return;
+      const fn = activeUndoAction;
+      activeUndoAction = null;
+      document.getElementById('adminToast').classList.add('hidden');
+      await fn();
+    });
+
     document.getElementById('roomSelect').addEventListener('change', renderDisplay);
     document.getElementById('daySelect').addEventListener('change', renderDisplay);
     document.getElementById('timeSelect').addEventListener('input', renderDisplay);
@@ -712,23 +940,45 @@
     document.getElementById('adminSearch').addEventListener('input', renderAdminPanel);
     document.getElementById('adminRoomFilter').addEventListener('change', renderAdminPanel);
 
-    document.getElementById('adminRoomsGrid').addEventListener('change', (e) => {
+    document.getElementById('adminRoomsGrid').addEventListener('change', async (e) => {
       const roomId = e.target.getAttribute('data-age-room');
       if (roomId && roomsMap[roomId]) {
-        roomsMap[roomId].ageGroup = e.target.value;
-        saveServerState();
-        renderAdminPanel();
-        renderScheduleTable();
-        renderDisplay();
+        const prevOverride = roomsMap[roomId].overrideAgeGroupId;
+        const nextOverride = e.target.value || null;
+        const updated = await patchRoom(roomId, { overrideAgeGroupId: nextOverride });
+        if (updated) {
+          renderAdminPanel();
+          renderScheduleTable();
+          renderDisplay();
+          showAdminToast(`Updated color override for ${updated.name}.`, {
+            onUndo: async () => {
+              const reverted = await patchRoom(roomId, { overrideAgeGroupId: prevOverride });
+              if (reverted) { renderAdminPanel(); renderScheduleTable(); renderDisplay(); }
+            }
+          });
+        }
+        return;
+      }
+      const noteRoomId = e.target.getAttribute('data-note-room');
+      if (noteRoomId && roomsMap[noteRoomId]) {
+        const val = e.target.value;
+        flushDebounced(`room-note:${noteRoomId}`, async () => {
+          const updated = await patchRoom(noteRoomId, { note: val });
+          if (updated) renderDisplay();
+        });
       }
     });
 
     document.getElementById('adminRoomsGrid').addEventListener('input', (e) => {
       const roomId = e.target.getAttribute('data-note-room');
       if (roomId && roomsMap[roomId]) {
-        roomsMap[roomId].note = e.target.value;
-        saveServerState();
+        const val = e.target.value;
+        roomsMap[roomId].note = val;
         renderDisplay();
+        scheduleDebounced(`room-note:${roomId}`, async () => {
+          const updated = await patchRoom(roomId, { note: val });
+          if (updated) renderDisplay();
+        });
       }
     });
 
@@ -745,32 +995,103 @@
         const roomId = copyBtn.getAttribute('data-copy-link');
         const base = window.location.href.split('?')[0];
         copyTextToClipboard(`${base}?room=${encodeURIComponent(roomId)}&kiosk=1`);
-        showAdminToast(`Copied iPad kiosk link for Room ${roomId}: ?room=${roomId}&kiosk=1`);
+        showAdminToast(`Copied iPad kiosk link for Room ${roomId}: ?room=${encodeURIComponent(roomId)}&kiosk=1`);
       }
     });
 
-    document.getElementById('adminClassesBody').addEventListener('click', (e) => {
+    document.getElementById('adminClassesBody').addEventListener('click', async (e) => {
       const btn = e.target.closest('[data-toggle-cancel]');
       if (!btn) return;
-      const item = scheduleList.find(c => c.id === Number(btn.getAttribute('data-toggle-cancel')));
-      if (item) {
-        item.cancelled = !item.cancelled;
-        saveServerState();
+      const classId = Number(btn.getAttribute('data-toggle-cancel'));
+      const item = scheduleList.find(c => c.id === classId);
+      if (!item) return;
+      const prevCancelled = item.cancelled;
+      const nextCancelled = !prevCancelled;
+      const updated = await patchClass(classId, { cancelled: nextCancelled });
+      if (updated) {
         renderAdminPanel();
         renderDisplay();
+        showAdminToast(`${nextCancelled ? 'Cancelled' : 'Restored'} "${updated.title}".`, {
+          onUndo: async () => {
+            const reverted = await patchClass(classId, { cancelled: prevCancelled });
+            if (reverted) { renderAdminPanel(); renderDisplay(); }
+          }
+        });
+      }
+    });
+
+    document.getElementById('adminClassesBody').addEventListener('change', async (e) => {
+      const ageId = e.target.getAttribute('data-edit-age');
+      if (ageId) {
+        const classId = Number(ageId);
+        const item = scheduleList.find(c => c.id === classId);
+        if (!item) return;
+        const prevAge = item.ageGroupId;
+        const nextAge = e.target.value;
+        const updated = await patchClass(classId, { ageGroupId: nextAge });
+        if (updated) {
+          renderScheduleTable();
+          renderDisplay();
+          showAdminToast(`Updated age group for "${updated.title}".`, {
+            onUndo: async () => {
+              const reverted = await patchClass(classId, { ageGroupId: prevAge });
+              if (reverted) { renderAdminPanel(); renderScheduleTable(); renderDisplay(); }
+            }
+          });
+        }
+        return;
+      }
+      const titleId = e.target.getAttribute('data-edit-title');
+      if (titleId) {
+        const classId = Number(titleId);
+        const val = e.target.value;
+        flushDebounced(`class-title:${classId}`, async () => {
+          const updated = await patchClass(classId, { title: val });
+          if (updated) { renderScheduleTable(); renderDisplay(); }
+        });
+        return;
+      }
+      const leaderId = e.target.getAttribute('data-edit-leader');
+      if (leaderId) {
+        const classId = Number(leaderId);
+        const val = e.target.value;
+        flushDebounced(`class-leader:${classId}`, async () => {
+          const updated = await patchClass(classId, { leader: val });
+          if (updated) { renderScheduleTable(); renderDisplay(); }
+        });
       }
     });
 
     document.getElementById('adminClassesBody').addEventListener('input', (e) => {
       const titleId = e.target.getAttribute('data-edit-title');
       if (titleId) {
-        const item = scheduleList.find(c => c.id === Number(titleId));
-        if (item) { item.title = e.target.value; saveServerState(); renderScheduleTable(); renderDisplay(); }
+        const classId = Number(titleId);
+        const item = scheduleList.find(c => c.id === classId);
+        if (item) {
+          const val = e.target.value;
+          item.title = val;
+          renderScheduleTable();
+          renderDisplay();
+          scheduleDebounced(`class-title:${classId}`, async () => {
+            const updated = await patchClass(classId, { title: val });
+            if (updated) { renderScheduleTable(); renderDisplay(); }
+          });
+        }
       }
       const leaderId = e.target.getAttribute('data-edit-leader');
       if (leaderId) {
-        const item = scheduleList.find(c => c.id === Number(leaderId));
-        if (item) { item.leader = e.target.value; saveServerState(); renderScheduleTable(); renderDisplay(); }
+        const classId = Number(leaderId);
+        const item = scheduleList.find(c => c.id === classId);
+        if (item) {
+          const val = e.target.value;
+          item.leader = val;
+          renderScheduleTable();
+          renderDisplay();
+          scheduleDebounced(`class-leader:${classId}`, async () => {
+            const updated = await patchClass(classId, { leader: val });
+            if (updated) { renderScheduleTable(); renderDisplay(); }
+          });
+        }
       }
     });
 
@@ -781,15 +1102,15 @@
     dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('border-indigo-500'); handleSpreadsheetFile(e.dataTransfer.files[0]); });
 
     (async function init() {
-      await Promise.all([checkAuthStatus(), fetchServerState()]);
+      await Promise.all([checkAuthStatus(), fetchServerState(true)]);
       const params = new URLSearchParams(window.location.search);
       if (params.get('kiosk') === '1') {
         setLiveClock(true);
         setKioskMode(true);
       }
-      // Poll server every 15 seconds so all 30+ iPads stay in sync
+      // Poll server every 15 seconds using ETag so all 30+ iPads stay in sync efficiently
       setInterval(() => {
-        if (currentTab === 'display') fetchServerState();
+        if (currentTab === 'display') fetchServerState(false);
       }, 15000);
     })();
   </script>
